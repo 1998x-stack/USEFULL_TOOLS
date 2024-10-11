@@ -145,4 +145,4 @@ def generate_and_update_ics(event_data, notion_token, output_filename='updated_e
 if __name__ == '__main__':
     ics_file_path = 'workday_reminders_with_alarms.ics'
     event_data = extract_notion_links(ics_file_path)
-    generate_and_update_ics(event_data, 'secret_FfvNl5Q0bVOOcwBLxhvjIihIN5lXpbdphrQ5yS31KYK', 'todo_reminders.ics')
+    generate_and_update_ics(event_data, os.environ.get("NOTION_API_KEY"), 'todo_reminders.ics')
