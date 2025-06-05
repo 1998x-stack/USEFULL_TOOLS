@@ -1,0 +1,21 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Apple Inc.//macOS 13.4//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:xieming-daily-summary@example.com
+DTSTAMP:20250529T000000Z
+DTSTART;TZID=Asia/Shanghai:20250529T233000
+DTEND;TZID=Asia/Shanghai:20250529T233300
+SUMMARY:📝 每日总结录音 🎙️ (控制3分钟内)
+DESCRIPTION:亲爱的谢明（xieminghack@163.com）\n\n请打开苹果录音 🎤 录制今日总结：\n\n🔹 简洁明了\n🔹 条理分明\n🔹 控制3分钟 ⏳\n\n💡 建议提纲：\n1. 今日成就 ✅\n2. 主要收获 📚\n3. 明日计划 ✨
+LOCATION:使用iPhone录音应用
+BEGIN:VALARM
+TRIGGER:-PT10M
+ACTION:DISPLAY
+DESCRIPTION:⏰ 10分钟后开始每日录音总结
+END:VALARM
+RRULE:FREQ=DAILY;UNTIL=20270529T233000Z
+ORGANIZER;CN=谢明:mailto:xieminghack@163.com
+END:VEVENT
+END:VCALENDAR
