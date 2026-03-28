@@ -112,6 +112,71 @@ def data():
     pass
 
 
+# --- Data commands ---
+
+@data.command("json-flatten")
+@click.argument("input_file")
+@click.option("-o", "--output", default=None, help="Output file")
+def data_json_flatten(input_file, output):
+    """Flatten nested JSON to dot-notation keys."""
+    import json as json_mod
+    from devkit.data.json_utils import flatten_json
+    with open(input_file, "r", encoding="utf-8") as f:
+        original = json_mod.load(f)
+    result = flatten_json(original)
+    out = json_mod.dumps(result, indent=2, ensure_ascii=False)
+    if output:
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(out)
+        click.echo(f"Flattened JSON written to {output}")
+    else:
+        click.echo(out)
+
+
+@data.command("json-merge")
+@click.argument("files", nargs=-1, required=True)
+@click.option("-o", "--output", required=True, help="Output JSONL file")
+def data_json_merge(files, output):
+    """Merge multiple JSONL files."""
+    from devkit.data.json_utils import merge_jsonl
+    merge_jsonl(list(files), output)
+    click.echo(f"Merged {len(files)} files into {output}")
+
+
+@data.command("csv-merge")
+@click.argument("files", nargs=-1, required=True)
+@click.option("-o", "--output", required=True, help="Output CSV file")
+def data_csv_merge(files, output):
+    """Merge multiple CSV files."""
+    from devkit.data.csv_utils import merge_csvs
+    merge_csvs(list(files), output)
+    click.echo(f"Merged {len(files)} files into {output}")
+
+
+@data.command("csv-split")
+@click.argument("input_file")
+@click.option("--rows", required=True, type=int, help="Rows per file")
+@click.option("-o", "--output-dir", default="./splits", help="Output directory")
+def data_csv_split(input_file, rows, output_dir):
+    """Split a large CSV into smaller files."""
+    from devkit.data.csv_utils import split_csv
+    result = split_csv(input_file, rows, output_dir)
+    click.echo(f"Split into {len(result)} files in {output_dir}")
+
+
+@data.command("excel2csv")
+@click.argument("input_file")
+@click.option("-o", "--output", default=None, help="Output CSV file")
+@click.option("--sheet", default=None, help="Sheet name")
+def data_excel2csv(input_file, output, sheet):
+    """Convert Excel to CSV."""
+    from devkit.data.excel2csv import excel_to_csv
+    if output is None:
+        output = input_file.rsplit(".", 1)[0] + ".csv"
+    excel_to_csv(input_file, output, sheet=sheet)
+    click.echo(f"Converted to {output}")
+
+
 @cli.group()
 def web():
     """Web utility tools."""
