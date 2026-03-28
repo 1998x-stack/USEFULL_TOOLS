@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "devkit-tools"
+version = "0.1.0"
+description = "A Swiss Army Knife for Developers - 27+ CLI tools for file conversion, text processing, AI/LLM, and more"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [{name = "1998x-stack", email = "2484230700@qq.com"}]
+keywords = ["cli", "tools", "developer", "utilities", "converter", "nlp", "ai", "devops"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Utilities",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "click>=8.0",
+]
+
+[project.scripts]
+devkit = "devkit.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/1998x-stack/devkit"
+Repository = "https://github.com/1998x-stack/devkit"
+Issues = "https://github.com/1998x-stack/devkit/issues"
+
+[project.optional-dependencies]
+ai = ["tiktoken>=0.5.0", "jinja2>=3.0"]
+nlp = ["jieba>=0.42", "jionlp>=1.4"]
+convert = ["PyMuPDF>=1.23", "python-docx>=0.8", "markdown>=3.4", "beautifulsoup4>=4.12", "reportlab>=4.0", "Pillow>=10.0", "markdown2>=2.4", "PyPDF2>=3.0"]
+data = ["openpyxl>=3.1"]
+web = ["qrcode[pil]>=7.4", "requests>=2.28", "beautifulsoup4>=4.12"]
+all = ["devkit-tools[ai,nlp,convert,data,web]"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff>=0.1.0"]
+
+[tool.setuptools.packages.find]
+include = ["devkit*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120

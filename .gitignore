@@ -1,3 +1,41 @@
-logs/*
-data/*
-ics_files/*
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Project-specific
+logs/
+data/
+ics_files/
+*.ics
+*.log
+
+# Distribution
+*.tar.gz
+*.whl

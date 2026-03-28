@@ -1,0 +1,16 @@
+{
+  "name": "devkit",
+  "version": "0.1.0",
+  "features": {
+    "convert": ["md2pdf", "md2docx", "pdf-merge"],
+    "text": ["length", "keywords", "split"],
+    "ai": ["tokens", "cost", "prompt"]
+  },
+  "metadata": {
+    "author": {
+      "name": "1998x-stack",
+      "location": "China"
+    },
+    "tags": ["cli", "tools", "developer"]
+  }
+}
