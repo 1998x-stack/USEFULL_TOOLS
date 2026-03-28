@@ -24,6 +24,105 @@ def convert():
     pass
 
 
+# --- Convert commands ---
+
+@convert.command("pdf-merge")
+@click.argument("directory")
+@click.option("-o", "--output", default="merged.pdf", help="Output PDF path")
+def convert_pdf_merge(directory, output):
+    """Merge PDF files in a directory."""
+    from devkit.convert.pdf_merge import merge_pdfs
+    count = merge_pdfs(directory, output)
+    click.echo(f"Merged {count} PDFs into {output}")
+
+
+@convert.command("pdf-compress")
+@click.argument("input_file")
+@click.option("-o", "--output", default=None, help="Output path")
+@click.option("--quality", default="ebook", type=click.Choice(["screen", "ebook", "printer", "prepress"]))
+def convert_pdf_compress(input_file, output, quality):
+    """Compress a PDF file."""
+    from devkit.convert.pdf_compress import compress_pdf
+    result = compress_pdf(input_file, output, quality=quality)
+    if result:
+        click.echo(f"Compressed: {result}")
+    else:
+        click.echo("Compression failed.", err=True)
+
+
+@convert.command("mp4-to-mp3")
+@click.argument("input_path")
+def convert_mp4_to_mp3(input_path):
+    """Convert MP4 video to MP3 audio."""
+    from devkit.convert.media import mp4_to_mp3
+    result = mp4_to_mp3(input_path)
+    if result:
+        click.echo(f"Converted: {result}")
+    else:
+        click.echo("Conversion failed.", err=True)
+
+
+@convert.command("webp-to-png")
+@click.argument("input_path")
+@click.option("-o", "--output", default=None, help="Output path")
+def convert_webp_to_png(input_path, output):
+    """Convert WebP image to PNG."""
+    from devkit.convert.media import webp_to_png
+    result = webp_to_png(input_path, output)
+    if result:
+        click.echo(f"Converted: {result}")
+    else:
+        click.echo("Conversion failed.", err=True)
+
+
+@convert.command("resize")
+@click.argument("input_path")
+@click.argument("size")
+@click.option("-o", "--output", default=None, help="Output path")
+def convert_resize(input_path, size, output):
+    """Resize an image (e.g., '300' for square, '800x600')."""
+    from devkit.convert.media import resize_image
+    result = resize_image(input_path, size, output)
+    if result:
+        click.echo(f"Resized: {result}")
+    else:
+        click.echo("Resize failed.", err=True)
+
+
+@convert.command("md2pdf")
+@click.argument("input_path")
+@click.option("-o", "--output", default=None, help="Output PDF path")
+def convert_md2pdf(input_path, output):
+    """Convert Markdown to PDF."""
+    from devkit.convert.md2pdf import markdown_to_pdf
+    result = markdown_to_pdf(input_path, output)
+    click.echo(f"Converted: {result}")
+
+
+@convert.command("md2docx")
+@click.argument("input_path")
+@click.option("-o", "--output", default=None, help="Output DOCX path")
+def convert_md2docx(input_path, output):
+    """Convert Markdown to DOCX."""
+    from devkit.convert.md2docx import markdown_to_docx
+    result = markdown_to_docx(input_path, output)
+    click.echo(f"Converted: {result}")
+
+
+@convert.command("doc")
+@click.argument("input_path")
+@click.option("--to", "to_format", required=True, type=click.Choice(["pdf", "md", "docx"]))
+@click.option("-o", "--output", default=None, help="Output path")
+def convert_doc(input_path, to_format, output):
+    """Convert between document formats (requires LibreOffice/Pandoc)."""
+    from devkit.convert.doc_convert import convert_document
+    result = convert_document(input_path, to_format, output)
+    if result:
+        click.echo(f"Converted: {result}")
+    else:
+        click.echo("Conversion failed or unsupported format.", err=True)
+
+
 @cli.group()
 def text():
     """Text & NLP processing tools."""
