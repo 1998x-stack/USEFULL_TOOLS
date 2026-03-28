@@ -1,4 +1,13 @@
-"""Information-entropy based text length calculation."""
+"""Information-entropy based text length calculation.
+
+Assigns weights to different character types based on their information density:
+- CJK characters: 1.0 (high density)
+- English words: 0.47 per word (semantic unit)
+- Numbers: 0.01 per digit
+- Spaces: 0.001
+- Punctuation: 0.05
+- Emoji: 0.2
+"""
 
 import math
 import re
@@ -18,6 +27,7 @@ _PATTERN = re.compile(
 
 
 def _unclassified_length(text: str) -> float:
+    """Calculate length for characters not matched by the main pattern."""
     length = 0.0
     for char in text:
         if "\u4E00" <= char <= "\u9FFF" or "\u3400" <= char <= "\u4DBF":
@@ -40,16 +50,26 @@ def _unclassified_length(text: str) -> float:
 
 
 def calculate_custom_length(text: str) -> int:
-    """Calculate information-weighted text length."""
+    """Calculate information-weighted text length.
+
+    Args:
+        text: Input text string.
+
+    Returns:
+        Weighted length as integer (floor).
+    """
     if not text:
         return 0
+
     total = 0.0
     last_index = 0
+
     for match in _PATTERN.finditer(text):
         start, end = match.span()
         if last_index < start:
             total += _unclassified_length(text[last_index:start])
         last_index = end
+
         if match.group("word"):
             total += 0.47
         elif match.group("mixed"):
@@ -66,6 +86,8 @@ def calculate_custom_length(text: str) -> int:
             continue
         elif match.group("emoji"):
             total += 0.2
+
     if last_index < len(text):
         total += _unclassified_length(text[last_index:])
+
     return math.floor(total)
