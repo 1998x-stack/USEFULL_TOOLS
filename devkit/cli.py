@@ -30,6 +30,63 @@ def text():
     pass
 
 
+# --- Text commands ---
+
+@text.command("length")
+@click.argument("text_input")
+def text_length(text_input):
+    """Calculate information-weighted text length."""
+    from devkit.text.text_length import calculate_custom_length
+    if os.path.isfile(text_input):
+        with open(text_input, "r", encoding="utf-8") as f:
+            text_input = f.read()
+    result = calculate_custom_length(text_input)
+    click.echo(f"Weighted length: {result}")
+
+
+@text.command("keywords")
+@click.argument("text_input")
+@click.option("--lang", default="zh", type=click.Choice(["zh", "en"]))
+@click.option("--mode", default="all", type=click.Choice(["all", "filter"]))
+@click.option("--top", default=10, type=int)
+def text_keywords(text_input, lang, mode, top):
+    """Extract weighted keywords from text."""
+    from devkit.text.keywords import extract_keywords
+    if os.path.isfile(text_input):
+        with open(text_input, "r", encoding="utf-8") as f:
+            text_input = f.read()
+    results = extract_keywords(text_input, lang=lang, mode=mode, top_k=top)
+    for kw in results:
+        click.echo(f"  {kw['word']:<20} boost={kw['boost']:.2f}")
+
+
+@text.command("split")
+@click.argument("text_input")
+@click.option("--criterion", default="coarse", type=click.Choice(["coarse", "fine"]))
+def text_split(text_input, criterion):
+    """Split text into sentences."""
+    from devkit.text.split_sentence import split_sentence
+    if os.path.isfile(text_input):
+        with open(text_input, "r", encoding="utf-8") as f:
+            text_input = f.read()
+    sentences = split_sentence(text_input, criterion=criterion)
+    for i, s in enumerate(sentences, 1):
+        click.echo(f"  [{i}] {s}")
+
+
+@text.command("char-count")
+@click.argument("text_input")
+def text_char_count(text_input):
+    """Count characters by category."""
+    from devkit.text.tokenizer import char_count
+    if os.path.isfile(text_input):
+        with open(text_input, "r", encoding="utf-8") as f:
+            text_input = f.read()
+    counts = char_count(text_input)
+    for category, count in counts.items():
+        click.echo(f"  {category:<12} {count}")
+
+
 @cli.group()
 def files():
     """File management tools."""
