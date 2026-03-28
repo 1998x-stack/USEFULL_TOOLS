@@ -106,6 +106,76 @@ def ai():
     pass
 
 
+# --- AI commands ---
+
+@ai.command("tokens")
+@click.argument("text_or_file")
+@click.option("--model", default="gpt-4o", help="Model name for tokenization")
+@click.option("--file", "is_file", is_flag=True, help="Treat input as file path")
+def ai_tokens(text_or_file, model, is_file):
+    """Count tokens for LLM models."""
+    from devkit.ai.token_counter import count_tokens, count_tokens_file
+    if is_file:
+        count = count_tokens_file(text_or_file, model=model)
+    else:
+        count = count_tokens(text_or_file, model=model)
+    click.echo(f"Tokens ({model}): {count}")
+
+
+@ai.command("cost")
+@click.option("--model", required=True, help="Model name")
+@click.option("--input-tokens", required=True, type=int, help="Input token count")
+@click.option("--output-tokens", required=True, type=int, help="Output token count")
+def ai_cost(model, input_tokens, output_tokens):
+    """Estimate API cost."""
+    from devkit.ai.cost_calculator import calculate_cost
+    cost = calculate_cost(model, input_tokens, output_tokens)
+    if cost is None:
+        click.echo(f"Unknown model: {model}", err=True)
+        raise SystemExit(1)
+    click.echo(f"Estimated cost for {model}: ${cost:.6f}")
+
+
+@ai.command("cost-compare")
+@click.option("--input-tokens", required=True, type=int, help="Input token count")
+@click.option("--output-tokens", required=True, type=int, help="Output token count")
+def ai_cost_compare(input_tokens, output_tokens):
+    """Compare API costs across models."""
+    from devkit.ai.cost_calculator import compare_costs
+    costs = compare_costs(input_tokens, output_tokens)
+    click.echo(f"Cost comparison ({input_tokens} in / {output_tokens} out):\n")
+    for model, cost in costs.items():
+        click.echo(f"  {model:<20} ${cost:.6f}")
+
+
+@ai.command("prompt")
+@click.argument("name")
+@click.option("--vars", "variables", default=None, help="JSON variables for rendering")
+@click.option("--save", "content", default=None, help="Save content as template")
+@click.option("--list", "list_all", is_flag=True, help="List all templates")
+def ai_prompt(name, variables, content, list_all):
+    """Manage prompt templates."""
+    import json as json_mod
+    from devkit.ai.prompt_template import render_template, save_template, load_template, list_templates
+    if list_all:
+        for t in list_templates():
+            click.echo(f"  {t}")
+        return
+    if content:
+        path = save_template(name, content)
+        click.echo(f"Template saved: {path}")
+        return
+    template = load_template(name)
+    if template is None:
+        click.echo(f"Template not found: {name}", err=True)
+        raise SystemExit(1)
+    if variables:
+        vars_dict = json_mod.loads(variables)
+        click.echo(render_template(template, vars_dict))
+    else:
+        click.echo(template)
+
+
 @cli.group()
 def data():
     """Data processing tools."""
