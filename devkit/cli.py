@@ -36,6 +36,70 @@ def files():
     pass
 
 
+# --- Files commands ---
+
+@files.command("dedup")
+@click.argument("directory")
+@click.option("--extensions", default="pdf,mp3,mp4,html", help="Comma-separated extensions")
+@click.option("--dry-run/--execute", default=True, help="Preview vs actually delete")
+def files_dedup(directory, extensions, dry_run):
+    """Find and remove duplicate files."""
+    from devkit.files.dedup import remove_duplicates
+    ext_list = [f"*.{e.strip()}" for e in extensions.split(",")]
+    removed = remove_duplicates(directory, ext_list, dry_run=dry_run)
+    action = "Would remove" if dry_run else "Removed"
+    for f in removed:
+        click.echo(f"  {action}: {f}")
+    click.echo(f"\n{len(removed)} duplicate(s) {'found' if dry_run else 'removed'}.")
+
+
+@files.command("search")
+@click.argument("file")
+@click.argument("query")
+@click.option("--context", default=3, help="Lines of context around matches")
+def files_search(file, query, context):
+    """Search for text in a file."""
+    from devkit.files.search_log import search_file
+    results = search_file(file, query, context_lines=context)
+    if not results:
+        click.echo(f"No matches for '{query}' in {file}")
+        return
+    for r in results:
+        click.echo(f"\n--- Line {r['line_number']} ---")
+        for line in r["context"]:
+            click.echo(f"  {line}")
+    click.echo(f"\n{len(results)} match(es) found.")
+
+
+@files.command("extract-code")
+@click.argument("directory")
+@click.option("-o", "--output", default=None, help="Output file path")
+@click.option("--extensions", default="py,js,ts,html,css", help="Comma-separated extensions")
+def files_extract_code(directory, output, extensions):
+    """Extract and merge source code files."""
+    from devkit.files.extract_code import extract_code_files
+    ext_list = [e.strip() for e in extensions.split(",")]
+    result = extract_code_files(directory, extensions=ext_list, output=output)
+    if output:
+        click.echo(f"Code extracted to {output}")
+    else:
+        click.echo(result)
+
+
+@files.command("rename")
+@click.argument("directory")
+@click.option("--pattern", required=True, help="Rename pattern (e.g., 'img_{n:03d}.jpg')")
+@click.option("--dry-run/--execute", default=True, help="Preview vs actually rename")
+def files_rename(directory, pattern, dry_run):
+    """Batch rename files with pattern templates."""
+    from devkit.files.batch_rename import batch_rename
+    renames = batch_rename(directory, pattern, dry_run=dry_run)
+    for old, new in renames:
+        click.echo(f"  {os.path.basename(old)} -> {os.path.basename(new)}")
+    action = "Would rename" if dry_run else "Renamed"
+    click.echo(f"\n{action} {len(renames)} file(s).")
+
+
 @cli.group()
 def ai():
     """AI/LLM utility tools."""
