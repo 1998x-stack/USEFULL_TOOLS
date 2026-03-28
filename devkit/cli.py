@@ -310,6 +310,48 @@ def web():
     pass
 
 
+# --- Web commands ---
+
+@web.command("qrcode")
+@click.argument("data")
+@click.option("-o", "--output", default="qr.png", help="Output image path")
+@click.option("--size", default=300, help="Image size in pixels")
+def web_qrcode(data, output, size):
+    """Generate a QR code image."""
+    from devkit.web.qr_code import generate_qr
+    path = generate_qr(data, output, size=size)
+    click.echo(f"QR code saved to {path}")
+
+
+@web.command("qrcode-read")
+@click.argument("image")
+def web_qrcode_read(image):
+    """Read QR code from an image."""
+    from devkit.web.qr_code import read_qr
+    result = read_qr(image)
+    if result:
+        click.echo(result)
+    else:
+        click.echo("No QR code found in image.", err=True)
+
+
+@web.command("validate-url")
+@click.argument("url")
+@click.option("--metadata", is_flag=True, help="Fetch and show page metadata")
+def web_validate_url(url, metadata):
+    """Validate a URL."""
+    from devkit.web.url_validator import is_valid_url, get_metadata
+    if not is_valid_url(url):
+        click.echo(f"Invalid URL: {url}", err=True)
+        raise SystemExit(1)
+    click.echo(f"Valid URL: {url}")
+    if metadata:
+        meta = get_metadata(url)
+        if meta:
+            for k, v in meta.items():
+                click.echo(f"  {k}: {v}")
+
+
 @cli.group()
 def dev():
     """Developer utility tools."""
