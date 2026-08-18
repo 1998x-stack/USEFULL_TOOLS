@@ -1,6 +1,5 @@
 """Tests for conversion tools."""
 
-import os
 
 from devkit.convert.pdf_merge import merge_pdfs
 from devkit.convert.media import resize_image

@@ -1,8 +1,5 @@
 """Tests for developer utility tools."""
 
-import os
-import socket
-import tempfile
 
 from devkit.dev.hash_tool import hash_string, hash_file
 from devkit.dev.port_finder import is_port_available, find_available_ports

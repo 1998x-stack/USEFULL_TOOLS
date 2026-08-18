@@ -1,6 +1,5 @@
 """Tests for file management tools."""
 
-import os
 
 from devkit.files.dedup import find_duplicates
 from devkit.files.search_log import search_file
