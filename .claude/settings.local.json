@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(pip install:*)",
+      "Bash(pytest tests/test_cli.py -v)",
+      "Bash(pytest tests/test_utils.py -v)",
+      "Bash(pytest:*)",
+      "Bash(python -m pytest tests/test_dev.py tests/test_files.py -v --tb=short)",
+      "Bash(python -m pytest tests/test_ai.py -v --tb=short)",
+      "Bash(python:*)",
+      "Bash(ls -d */)",
+      "Bash(devkit --version)",
+      "Bash(devkit:*)"
+    ]
+  }
+}
