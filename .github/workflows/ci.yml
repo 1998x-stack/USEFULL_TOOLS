@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/v0.4-b-structure-aware-docx, feat/v0.4-c-cjk-pdf-renderer]
+    branches: [main, feat/v0.4-b-structure-aware-docx, feat/v0.4-c-cjk-pdf-renderer, feat/v0.4-d-visual-golden-evaluation]
   pull_request:
     branches: [main]
 
@@ -36,7 +36,7 @@ jobs:
         run: ruff check devkit/ tests/
 
       - name: Run tests
-        run: pytest tests/ -v --tb=short -m 'not pdf_integration'
+        run: pytest tests/ -v --tb=short -m 'not pdf_integration and not visual_integration'
 
   pdf-integration:
     runs-on: ubuntu-latest
@@ -63,3 +63,36 @@ jobs:
 
       - name: Real CJK PDF generation and raster regression tests
         run: pytest tests/test_pdf_v04c.py -v --tb=short -m pdf_integration
+
+  visual-golden:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install pinned-OS document renderer and CJK fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends pandoc libreoffice-writer fontconfig fonts-noto-cjk
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,all]"
+
+      - name: Prepare candidate visual snapshots for independent approval
+        run: |
+          python -m devkit.convert.visual_cli candidate \
+            --manifest tests/fixtures/visual_v04d/manifest.json \
+            --out-dir "$RUNNER_TEMP/visual-golden-candidate" --emit-base64
+
+      - name: Upload candidate snapshots and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-golden-candidates
+          path: ${{ runner.temp }}/visual-golden-candidate/
+          if-no-files-found: warn

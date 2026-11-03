@@ -49,7 +49,10 @@ include = ["devkit*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["pdf_integration: real LibreOffice and CJK PDF raster integration tests"]
+markers = [
+  "pdf_integration: real LibreOffice and CJK PDF raster integration tests",
+  "visual_integration: independently approved real PDF visual golden tests",
+]
 addopts = "-v --tb=short"
 
 [tool.ruff]
