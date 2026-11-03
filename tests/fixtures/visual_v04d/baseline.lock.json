@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "review": "Six fixed screenshots visually inspected in 2026-11-03 CI; three-column table, chart, pagination and final sentinel confirmed.",
+  "environment": {
+    "font_family": "Noto Sans CJK SC",
+    "font_index": 2,
+    "font_sha256": "b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a",
+    "libreoffice": "LibreOffice 24.2.7.2 420(Build:2)",
+    "pandoc": "pandoc 3.1.3",
+    "pymupdf": "2.1"
+  }
+}

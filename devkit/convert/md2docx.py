@@ -1,48 +1,45 @@
-"""Markdown to DOCX converter."""
+"""Markdown to DOCX using Pandoc AST, typed DocumentIR and OOXML validation."""
 
-import os
+import tempfile
+from pathlib import Path
 from typing import Optional
 
+from devkit.convert._safe import publish_file, require_distinct
+from devkit.convert.engines import PandocEngine
+from devkit.convert.validate.structure import verify_docx_structure
 
-def markdown_to_docx(input_path: str, output_path: Optional[str] = None) -> str:
-    """Convert a Markdown file to DOCX.
 
-    Requires: markdown, python-docx, beautifulsoup4 (pip install devkit-tools[convert])
+def markdown_to_docx(
+    input_path: str,
+    output_path: Optional[str] = None,
+    *,
+    reference_doc: Optional[str] = None,
+) -> str:
+    """Convert Markdown preserving lists, tables, images and inline formatting.
+
+    The Pandoc JSON AST is the lossless rendering contract. DocumentIR projects
+    inspectable typed nodes, and independent OOXML validation protects against
+    silent omission of supported elements.
     """
-    try:
-        import markdown
-        from bs4 import BeautifulSoup
-        from docx import Document
-    except ImportError:
-        raise ImportError("markdown, python-docx, beautifulsoup4 required: pip install devkit-tools[convert]")
+    source = Path(input_path).absolute()
+    if not source.is_file():
+        raise FileNotFoundError(str(source))
+    destination = output_path or str(source.with_suffix(".docx"))
+    input_paths = [str(source)]
+    if reference_doc:
+        input_paths.append(str(reference_doc))
+    require_distinct(input_paths, destination)
 
-    if output_path is None:
-        output_path = os.path.splitext(input_path)[0] + ".docx"
+    engine = PandocEngine()
+    document = engine.parse_markdown(source)
+    # Validate before writing: remote images may cause unintended HTTP access.
+    engine.check_local_media(document, source)
 
-    with open(input_path, "r", encoding="utf-8") as f:
-        md_text = f.read()
+    with tempfile.TemporaryDirectory(prefix="devkit-md2docx-") as directory:
+        staged = Path(directory) / "result.docx"
+        engine.write_docx(document, staged, source, reference_doc=reference_doc)
 
-    html = markdown.markdown(md_text, extensions=["fenced_code", "tables"])
-    soup = BeautifulSoup(html, "html.parser")
-    doc = Document()
+        def check(path):
+            verify_docx_structure(path, document)
 
-    for elem in soup.children:
-        if not hasattr(elem, "name") or elem.name is None:
-            continue
-        text = elem.get_text()
-        if elem.name == "h1":
-            doc.add_heading(text, level=1)
-        elif elem.name == "h2":
-            doc.add_heading(text, level=2)
-        elif elem.name == "h3":
-            doc.add_heading(text, level=3)
-        elif elem.name in ("p", "div"):
-            doc.add_paragraph(text)
-        elif elem.name in ("ul", "ol"):
-            for li in elem.find_all("li", recursive=False):
-                doc.add_paragraph(li.get_text(), style="List Bullet")
-        elif elem.name == "pre":
-            doc.add_paragraph(text, style="Normal")
-
-    doc.save(output_path)
-    return output_path
+        return publish_file(staged, destination, input_paths, validator=check)

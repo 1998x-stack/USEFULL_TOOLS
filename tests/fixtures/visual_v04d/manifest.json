@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "render": {
+    "dpi": 96,
+    "max_pages": 8,
+    "pixel_threshold": 28,
+    "max_changed_fraction": 0.006,
+    "max_mean_error": 1.2
+  },
+  "cases": [
+    {
+      "id": "cjk-layout",
+      "markdown": "cjk-layout.md",
+      "regions": [
+        {
+          "name": "heading-introduction",
+          "page": 1,
+          "rect": [
+            0.07,
+            0.06,
+            0.92,
+            0.16
+          ],
+          "max_changed_fraction": 0.006
+        },
+        {
+          "name": "table-alignment",
+          "page": 1,
+          "rect": [
+            0.07,
+            0.15,
+            0.92,
+            0.28
+          ],
+          "max_changed_fraction": 0.004
+        },
+        {
+          "name": "chart-caption",
+          "page": 1,
+          "rect": [
+            0.07,
+            0.28,
+            0.92,
+            0.45
+          ],
+          "max_changed_fraction": 0.004
+        },
+        {
+          "name": "closing-paragraph",
+          "page": 1,
+          "rect": [
+            0.07,
+            0.43,
+            0.92,
+            0.57
+          ],
+          "max_changed_fraction": 0.006
+        }
+      ],
+      "expected_pages": 1,
+      "sha256": [
+        "417f4a47dc7997461c621e12edf4da2b29eaf52a6ae8a7b040999eaf90b86b41"
+      ]
+    },
+    {
+      "id": "pagination",
+      "markdown": "pagination.md",
+      "regions": [
+        {
+          "name": "first-chapter",
+          "page": 1,
+          "rect": [
+            0.06,
+            0.05,
+            0.94,
+            0.95
+          ],
+          "max_changed_fraction": 0.006
+        },
+        {
+          "name": "second-chapter",
+          "page": 2,
+          "rect": [
+            0.06,
+            0.05,
+            0.94,
+            0.95
+          ],
+          "max_changed_fraction": 0.006
+        },
+        {
+          "name": "third-chapter",
+          "page": 3,
+          "rect": [
+            0.06,
+            0.05,
+            0.94,
+            0.95
+          ],
+          "max_changed_fraction": 0.006
+        },
+        {
+          "name": "fourth-chapter",
+          "page": 4,
+          "rect": [
+            0.06,
+            0.05,
+            0.94,
+            0.95
+          ],
+          "max_changed_fraction": 0.006
+        },
+        {
+          "name": "last-page-sentinel",
+          "page": 5,
+          "rect": [
+            0.06,
+            0.04,
+            0.94,
+            0.33
+          ],
+          "max_changed_fraction": 0.004
+        }
+      ],
+      "expected_pages": 5,
+      "sha256": [
+        "9f5a9123ea3f85b4c2bafd3b871b4ef7b27db3214c1784a6b7a73d85643f469b",
+        "7d6fcc24e3a09b7649ea13c830048025f20b07be8cc296bbf5536db913d1ff72",
+        "3f88c4ddea924d6baec89d56fb3965b4d3cea0956ed2e537cf98521975698922",
+        "17333509c67f00285295f2546835945e5149f521b81305f65df7ebdef99d962a",
+        "c9d89fd9bb6063a087bce92af9c353c5d64087979956def11a75b0abd8fd26e4"
+      ]
+    }
+  ]
+}

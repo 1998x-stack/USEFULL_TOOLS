@@ -16,6 +16,18 @@
 
 See [V0.3 Data Contracts](docs/data-contracts-v0.3.md) for validation, output safety, and JSON path escaping.
 
+## V0.4 Document conversion (under review)
+
+Markdown → DOCX and PDF now use Pandoc's structured AST, validated DOCX,
+CJK-aware LibreOffice rendering, and independently approved PDF visual baselines.
+See [architecture](docs/conversion-v0.4.md),
+[DOCX contract](docs/conversion-v0.4b.md),
+[CJK PDF quality](docs/conversion-v0.4c.md), and
+[visual golden review](docs/conversion-v0.4d.md).
+
+Pandoc, LibreOffice Writer and installed CJK fonts are *system dependencies* for
+PDF fidelity. The Python `convert` optional extra installs Python libraries only.
+
 ## Features
 
 | Category | Tools | Description |

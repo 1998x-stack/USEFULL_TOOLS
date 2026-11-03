@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased] — V0.4 Document Conversion Fidelity (2026-11-03)
+
+- V0.4-A: staged/validated PDF and Office output, isolated LibreOffice, pypdf migration.
+- V0.4-B: Pandoc JSON/typed DocumentIR conversion and real DOCX OOXML structural golden tests.
+- V0.4-C: installed CJK glyph preflight, text recall and raster integrity with a complete Pandoc reference template.
+- V0.4-D: six independently reviewed PNG goldens, per-page/region diffs, pagination, font/renderer lock.
+- V0.4-E: named quality profiles and machine-readable conversion audit reports.
+
 ## [Unreleased] — V0.3 Data Correctness (2026-11-03)
 
 - Strict CSV schema and per-record width validation across merge, split and CSV-to-JSON.
