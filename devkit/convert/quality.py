@@ -240,24 +240,52 @@ def _route(source, to_format):
     raise ValueError(f"Unsupported conversion pair: {suffix} -> {to_format}")
 
 
-def convert_with_quality(input_path, to_format, output_path=None, *, profile="standard",
-                         report_path=None, reference_doc=None, font_family=None,
-                         min_text_recall=None, visual_manifest=None, visual_case=None,
-                         artifacts_dir=None):
-    """Convert and publish only after every selected quality gate has passed.
+def _new_report(source, destination, profile, route):
+    return QualityReport(
+        schema_version=1, profile=profile, operation=route,
+        source=str(source), destination=str(destination),
+        engine={"pipeline": {
+            "markdown_to_pdf": "pandoc+libreoffice+pymupdf",
+            "markdown_to_docx": "pandoc+ooxml",
+            "word_to_pdf": "libreoffice+pypdf",
+            "word_to_md": "pandoc",
+        }[route]},
+    )
 
-    A JSON report is written even when conversion fails, if report_path is
-    supplied and safe. Existing outputs are never replaced on gate failure.
-    """
-    selected = _profile(profile)
-    source = Path(input_path).absolute()
-    route = _route(source, to_format)
-    destination = Path(output_path).absolute() if output_path else source.with_suffix("." + to_format)
+
+def _finish_failed(report, started, exc, report_path, source, destination):
+    report.status = "failed"
+    report.elapsed_ms = round((time.perf_counter() - started) * 1000)
+    report.diagnostic(type(exc).__name__, str(exc))
+    _write_report(report, report_path, source, destination)
+    raise ConversionFailure(report) from exc
+
+
+def _audit_existing(source, stage, report, profile, *, visual_manifest=None,
+                    visual_case=None, artifacts_dir=None):
+    if report.operation == "markdown_to_docx":
+        _check_docx(source, stage, report, profile)
+    elif report.operation == "markdown_to_pdf":
+        _check_pdf(source, stage, report, profile,
+                   baseline_manifest=visual_manifest, baseline_case=visual_case,
+                   artifacts_dir=artifacts_dir)
+    elif report.operation == "word_to_pdf":
+        report.checked("pdf_integrity", {"pages": validate_pdf(stage)})
+        report.achieved_level = "L1"
+    elif report.operation == "word_to_md":
+        text = stage.read_text(encoding="utf-8")
+        report.checked("utf8_markdown_output", {"characters": len(text)})
+        report.achieved_level = "L1"
+
+
+def _validate_request(selected, source, destination, route, *, report_path=None,
+                      reference_doc=None, font_family=None, min_text_recall=None,
+                      visual_manifest=None, visual_case=None, artifacts_dir=None):
     require_distinct([source] + ([reference_doc] if reference_doc else []), destination)
     _validate_report_destination(report_path, source, destination)
     if not source.is_file():
         raise FileNotFoundError(str(source))
-    if reference_doc and to_format != "docx":
+    if reference_doc and route != "markdown_to_docx":
         raise ValueError("--reference-doc only applies to Markdown -> DOCX")
     if font_family and route != "markdown_to_pdf":
         raise ValueError("--font-family only applies to Markdown -> PDF")
@@ -269,21 +297,43 @@ def convert_with_quality(input_path, to_format, output_path=None, *, profile="st
         raise ValueError("Strict PDF requires approved visual manifest, case and artifacts directory")
     if min_text_recall is not None and not selected.min_text_recall <= min_text_recall <= 1:
         raise ValueError(
-            f"min_text_recall must be >= {selected.min_text_recall} for profile {profile} and <= 1"
+            f"min_text_recall must be >= {selected.min_text_recall} for profile {selected.name} and <= 1"
         )
 
+
+def _publish_result(stage, source, destination, reference_doc, to_format, report):
+    validator = {"pdf": validate_pdf, "docx": validate_docx}.get(to_format)
+    publish_file(stage, destination, [source] + ([reference_doc] if reference_doc else []),
+                 validator=validator)
+    report.checked("atomic_output_published")
+
+
+def convert_with_quality(input_path, to_format, output_path=None, *, profile="standard",
+                         report_path=None, reference_doc=None, font_family=None,
+                         min_text_recall=None, visual_manifest=None, visual_case=None,
+                         artifacts_dir=None):
+    """Convert and publish only after selected quality gates have passed.
+
+    The report is written for ordinary conversion/validation failures. Publishing
+    the final output and publishing its separate JSON report are not one atomic
+    multi-file transaction: a report write error after conversion is surfaced
+    directly (the successfully converted output remains published).
+    """
+    selected = _profile(profile)
+    source = Path(input_path).absolute()
+    route = _route(source, to_format)
+    destination = Path(output_path).absolute() if output_path else source.with_suffix("." + to_format)
+    report = _new_report(source, destination, profile, route)
     started = time.perf_counter()
-    report = QualityReport(
-        schema_version=1, profile=profile, operation=route,
-        source=str(source), destination=str(destination),
-        engine={"pipeline": {
-            "markdown_to_pdf": "pandoc+libreoffice+pymupdf",
-            "markdown_to_docx": "pandoc+ooxml",
-            "word_to_pdf": "libreoffice+pypdf",
-            "word_to_md": "pandoc",
-        }[route]},
-    )
+    # Invalid report destinations are rejected before any source/output mutation.
+    _validate_report_destination(report_path, source, destination)
     try:
+        _validate_request(
+            selected, source, destination, route, report_path=report_path,
+            reference_doc=reference_doc, font_family=font_family,
+            min_text_recall=min_text_recall, visual_manifest=visual_manifest,
+            visual_case=visual_case, artifacts_dir=artifacts_dir,
+        )
         with tempfile.TemporaryDirectory(prefix="devkit-quality-") as directory:
             stage = Path(directory) / ("converted." + to_format)
             if route == "markdown_to_pdf":
@@ -293,41 +343,60 @@ def convert_with_quality(input_path, to_format, output_path=None, *, profile="st
                     str(source), str(stage), font_family=font_family,
                     min_text_recall=max(selected.min_text_recall, min_text_recall or 0),
                 )
-                _check_pdf(
-                    source, stage, report, selected,
-                    baseline_manifest=visual_manifest, baseline_case=visual_case,
-                    artifacts_dir=artifacts_dir,
-                )
             elif route == "markdown_to_docx":
                 from devkit.convert.md2docx import markdown_to_docx
 
                 markdown_to_docx(str(source), str(stage), reference_doc=reference_doc)
-                _check_docx(source, stage, report, selected)
             else:
                 from devkit.convert.doc_convert import convert_document
 
                 result = convert_document(str(source), to_format, str(stage))
                 if not result or not stage.is_file():
                     raise RuntimeError(f"Backend did not produce {to_format}")
-                if to_format == "pdf":
-                    report.checked("pdf_integrity", {"pages": validate_pdf(stage)})
-                    report.achieved_level = "L1"
-                else:
-                    content = stage.read_text(encoding="utf-8")
-                    report.checked("utf8_markdown_output", {"characters": len(content)})
-                    report.achieved_level = "L1"
-
-            validator = {"pdf": validate_pdf, "docx": validate_docx}.get(to_format)
-            publish_file(stage, destination, [source] + ([reference_doc] if reference_doc else []),
-                         validator=validator)
-            report.checked("atomic_output_published")
+            _audit_existing(
+                source, stage, report, selected,
+                visual_manifest=visual_manifest, visual_case=visual_case,
+                artifacts_dir=artifacts_dir,
+            )
+            _publish_result(stage, source, destination, reference_doc, to_format, report)
             report.status = "passed"
             report.elapsed_ms = round((time.perf_counter() - started) * 1000)
-        _write_report(report, report_path, source, destination)
-        return ConversionResult(str(destination), report)
     except Exception as exc:
-        report.status = "failed"
+        _finish_failed(report, started, exc, report_path, source, destination)
+    _write_report(report, report_path, source, destination)
+    return ConversionResult(str(destination), report)
+
+
+def audit_existing(input_path, output_path, *, profile="standard", report_path=None,
+                   visual_manifest=None, visual_case=None, artifacts_dir=None):
+    """Assess an existing conversion without altering its output.
+
+    Format pair is inferred from the source/output suffixes. Structural and
+    visual evidence are measured from the existing output, not by re-rendering.
+    """
+    selected = _profile(profile)
+    source = Path(input_path).absolute()
+    output = Path(output_path).absolute()
+    route = _route(source, output.suffix.lower().lstrip("."))
+    report = _new_report(source, output, profile, route)
+    started = time.perf_counter()
+    _validate_report_destination(report_path, source, output)
+    try:
+        _validate_request(
+            selected, source, output, route, report_path=report_path,
+            visual_manifest=visual_manifest, visual_case=visual_case,
+            artifacts_dir=artifacts_dir,
+        )
+        if not output.is_file():
+            raise FileNotFoundError(f"Converted output is missing: {output}")
+        _audit_existing(
+            source, output, report, selected, visual_manifest=visual_manifest,
+            visual_case=visual_case, artifacts_dir=artifacts_dir,
+        )
+        report.checked("existing_output_assessed_without_modification")
+        report.status = "passed"
         report.elapsed_ms = round((time.perf_counter() - started) * 1000)
-        report.diagnostic(type(exc).__name__, str(exc))
-        _write_report(report, report_path, source, destination)
-        raise ConversionFailure(report) from exc
+    except Exception as exc:
+        _finish_failed(report, started, exc, report_path, source, output)
+    _write_report(report, report_path, source, output)
+    return report
