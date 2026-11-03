@@ -3,7 +3,6 @@
 import xml.etree.ElementTree as ET
 import zipfile
 from dataclasses import dataclass
-from pathlib import Path
 
 from devkit.convert.ir import DocumentIR
 
