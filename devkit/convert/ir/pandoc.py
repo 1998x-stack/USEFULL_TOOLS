@@ -80,8 +80,7 @@ def _table_rows(raw_rows, path: str) -> Tuple[BlockNode, ...]:
     rows = []
     for i, raw in enumerate(raw_rows):
         cells = []
-        for j, cell in enumerate(raw["c"][1]):
-            payload = cell["c"]
+        for j, payload in enumerate(raw[1]):
             cells.append(BlockNode(
                 kind="table_cell", source_ref=f"{path}[{i}].cell[{j}]",
                 children=_block_list(payload[4], f"{path}[{i}].cell[{j}].blocks"),
@@ -96,13 +95,13 @@ def _table_blocks(data, path: str) -> Tuple[BlockNode, ...]:
     if len(data) != 6:
         return ()
     rows = []
-    head = data[3]["c"][1]
+    head = data[3][1]
     rows.extend(_table_rows(head, f"{path}.head"))
     for i, body in enumerate(data[4]):
-        body_payload = body["c"]
+        body_payload = body
         rows.extend(_table_rows(body_payload[2], f"{path}.body[{i}].head"))
         rows.extend(_table_rows(body_payload[3], f"{path}.body[{i}].rows"))
-    rows.extend(_table_rows(data[5]["c"][1], f"{path}.foot"))
+    rows.extend(_table_rows(data[5][1], f"{path}.foot"))
     return tuple(rows)
 
 
