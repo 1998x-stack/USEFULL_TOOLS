@@ -32,6 +32,44 @@ class PageMetric:
     regions: tuple
 
 
+def inspect_line_overlaps(path, minimum_ratio=0.25):
+    """Detect substantive overlap of separately laid-out text lines.
+
+    The PDF text extractor is independent of the source Markdown. A tiny
+    intersection caused by font ascent/descent is ignored; only a shared
+    rectangle covering >= minimum_ratio of the smaller line is reported.
+    """
+    if not 0 < minimum_ratio <= 1:
+        raise ValueError("minimum_ratio must be in (0,1]")
+    findings = []
+    with fitz.open(str(path)) as pdf:
+        for page_index, page in enumerate(pdf, 1):
+            lines = []
+            for block in page.get_text("dict")["blocks"]:
+                if block.get("type") != 0:
+                    continue
+                for line in block.get("lines", []):
+                    if line.get("spans"):
+                        rect = fitz.Rect(line["bbox"])
+                        if rect.get_area() > 0:
+                            lines.append(rect)
+            for i, left in enumerate(lines):
+                for right in lines[i + 1:]:
+                    intersection = left & right
+                    area = intersection.get_area()
+                    if area < 12:
+                        continue
+                    ratio = area / min(left.get_area(), right.get_area())
+                    if ratio >= minimum_ratio:
+                        findings.append({
+                            "page": page_index,
+                            "intersection_ratio": round(ratio, 4),
+                            "left": list(left),
+                            "right": list(right),
+                        })
+    return findings
+
+
 def _digest(path):
     digest = hashlib.sha256()
     with open(path, "rb") as src:
@@ -214,6 +252,14 @@ def save_report(report, out_dir):
         reason = html.escape(str(case.get("error", "")))
         cells.append(f"<tr><td>{name}</td><td>{status}</td><td>{reason}</td></tr>")
         for page in case.get("pages", []):
+            page_name = f"{name}-p{page['page']:02d}"
+            cells.append(
+                f"<tr><td>{name} page {page['page']} "
+                f"<a href='{page_name}-actual.png'>actual</a> / "
+                f"<a href='{page_name}-diff.png'>diff</a></td>"
+                f"<td>{'PASS' if page['passed'] else 'FAIL'}</td>"
+                f"<td>changed={page['changed_fraction']:.6f}, mae={page['mean_absolute_error']:.3f}</td></tr>"
+            )
             for region in page.get("regions", []):
                 cells.append(
                     f"<tr><td>{name}: page {page['page']} / {html.escape(region['name'])}</td>"

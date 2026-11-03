@@ -13,7 +13,7 @@ from pathlib import Path
 from devkit.convert.fonts import choose_cjk_font
 from devkit.convert.md2pdf import markdown_to_pdf
 from devkit.convert.visual import (
-    current_environment, evaluate_pages, load_manifest, render_pages, save_report, _digest,
+    current_environment, evaluate_pages, inspect_line_overlaps, load_manifest, render_pages, save_report, _digest,
 )
 from devkit.convert.validate.pdf_quality import expected_text_from_ast
 from devkit.convert.engines import PandocEngine
@@ -48,6 +48,11 @@ def run_suite(manifest_path, out_dir, mode, emit_base64=False):
             target = out_dir / (identifier + ".pdf")
             markdown_to_pdf(str(markdown), str(target))
             pages = render_pages(target, dpi=config["dpi"], max_pages=config["max_pages"])
+            overlaps = inspect_line_overlaps(target)
+            if overlaps:
+                raise ValueError(
+                    f"{identifier}: {len(overlaps)} substantive overlapping text-line pair(s)"
+                )
             if mode == "candidate":
                 hashes = []
                 for index, page in enumerate(pages, 1):
