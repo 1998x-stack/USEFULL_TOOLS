@@ -89,47 +89,108 @@ def convert_resize(input_path, size, output):
         click.echo("Resize failed.", err=True)
 
 
+def _quality_cli_convert(input_path, to_format, output, profile, report, **kwargs):
+    """Consistent CLI errors, audit JSON, and exit status across converters."""
+    from devkit.convert.quality import ConversionFailure, convert_with_quality
+
+    try:
+        result = convert_with_quality(
+            input_path, to_format, output, profile=profile, report_path=report, **kwargs
+        )
+    except (ConversionFailure, ValueError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Converted: {result.output_path}")
+    click.echo(f"Quality: {result.report.achieved_level} / {result.report.profile}")
+    if report:
+        click.echo(f"Quality report: {report}")
+
+
 @convert.command("md2pdf")
 @click.argument("input_path")
 @click.option("-o", "--output", default=None, help="Output PDF path")
-@click.option("--font-family", default=None, help="Prefer this installed font family for CJK")
-@click.option("--min-text-recall", default=0.995, type=click.FloatRange(min=0.0, max=1.0),
-              help="Minimum required Unicode text recall (0.0–1.0)")
-def convert_md2pdf(input_path, output, font_family, min_text_recall):
-    """Convert Markdown to PDF with font preflight and content integrity checks."""
-    from devkit.convert.md2pdf import markdown_to_pdf
-    result = markdown_to_pdf(
-        input_path, output, font_family=font_family, min_text_recall=min_text_recall
+@click.option("--font-family", default=None, help="Installed preferred CJK font family")
+@click.option("--min-text-recall", default=None, type=click.FloatRange(min=0.0, max=1.0),
+              help="Override recall threshold upward (cannot weaken selected profile)")
+@click.option("--profile", default="standard", type=click.Choice(["fast", "standard", "strict"]))
+@click.option("--report", default=None, type=click.Path(dir_okay=False),
+              help="Write machine-readable quality JSON (including failures)")
+@click.option("--visual-manifest", default=None, type=click.Path(exists=True, dir_okay=False),
+              help="Approved visual golden manifest (strict PDF only)")
+@click.option("--visual-case", default=None, help="Approved visual case ID (strict PDF only)")
+@click.option("--artifacts-dir", default=None, type=click.Path(file_okay=False),
+              help="Directory for visual evidence (strict PDF only)")
+def convert_md2pdf(input_path, output, font_family, min_text_recall, profile, report,
+                   visual_manifest, visual_case, artifacts_dir):
+    """Convert Markdown to a checked PDF, with optional strict visual baseline."""
+    _quality_cli_convert(
+        input_path, "pdf", output, profile, report,
+        font_family=font_family, min_text_recall=min_text_recall,
+        visual_manifest=visual_manifest, visual_case=visual_case,
+        artifacts_dir=artifacts_dir,
     )
-    click.echo(f"Converted: {result}")
 
 
 @convert.command("md2docx")
 @click.argument("input_path")
 @click.option("-o", "--output", default=None, help="Output DOCX path")
 @click.option("--reference-doc", default=None, type=click.Path(exists=True, dir_okay=False),
-              help="Reference DOCX to supply Word styles and page setup")
-def convert_md2docx(input_path, output, reference_doc):
-    """Convert Markdown to DOCX."""
-    from devkit.convert.md2docx import markdown_to_docx
-    result = markdown_to_docx(input_path, output, reference_doc=reference_doc)
-    click.echo(f"Converted: {result}")
+              help="Existing DOCX style reference")
+@click.option("--profile", default="standard", type=click.Choice(["fast", "standard", "strict"]))
+@click.option("--report", default=None, type=click.Path(dir_okay=False),
+              help="Write machine-readable quality JSON")
+def convert_md2docx(input_path, output, reference_doc, profile, report):
+    """Convert Markdown to structurally verified DOCX."""
+    _quality_cli_convert(
+        input_path, "docx", output, profile, report, reference_doc=reference_doc
+    )
 
 
 @convert.command("doc")
 @click.argument("input_path")
 @click.option("--to", "to_format", required=True, type=click.Choice(["pdf", "md", "docx"]))
 @click.option("-o", "--output", default=None, help="Output path")
-@click.option("--reference-doc", default=None, type=click.Path(exists=True, dir_okay=False),
-              help="Reference DOCX when converting Markdown to Word")
-def convert_doc(input_path, to_format, output, reference_doc):
-    """Convert between document formats (requires LibreOffice/Pandoc)."""
-    from devkit.convert.doc_convert import convert_document
-    result = convert_document(input_path, to_format, output, reference_doc=reference_doc)
-    if result:
-        click.echo(f"Converted: {result}")
-    else:
-        click.echo("Conversion failed or unsupported format.", err=True)
+@click.option("--reference-doc", default=None, type=click.Path(exists=True, dir_okay=False))
+@click.option("--font-family", default=None, help="Preferred CJK font for Markdown -> PDF")
+@click.option("--profile", default="standard", type=click.Choice(["fast", "standard", "strict"]))
+@click.option("--report", default=None, type=click.Path(dir_okay=False))
+@click.option("--visual-manifest", default=None, type=click.Path(exists=True, dir_okay=False))
+@click.option("--visual-case", default=None)
+@click.option("--artifacts-dir", default=None, type=click.Path(file_okay=False))
+def convert_doc(input_path, to_format, output, reference_doc, font_family,
+                profile, report, visual_manifest, visual_case, artifacts_dir):
+    """Convert between supported document formats with a quality profile."""
+    _quality_cli_convert(
+        input_path, to_format, output, profile, report,
+        reference_doc=reference_doc, font_family=font_family,
+        visual_manifest=visual_manifest, visual_case=visual_case,
+        artifacts_dir=artifacts_dir,
+    )
+
+
+@convert.command("audit")
+@click.argument("source_path")
+@click.argument("output_path")
+@click.option("--profile", default="standard", type=click.Choice(["fast", "standard", "strict"]))
+@click.option("--report", default=None, type=click.Path(dir_okay=False))
+@click.option("--visual-manifest", default=None, type=click.Path(exists=True, dir_okay=False))
+@click.option("--visual-case", default=None)
+@click.option("--artifacts-dir", default=None, type=click.Path(file_okay=False))
+def convert_audit(source_path, output_path, profile, report,
+                  visual_manifest, visual_case, artifacts_dir):
+    """Audit an existing output without changing or re-rendering it."""
+    from devkit.convert.quality import ConversionFailure, audit_existing
+
+    try:
+        quality = audit_existing(
+            source_path, output_path, profile=profile, report_path=report,
+            visual_manifest=visual_manifest, visual_case=visual_case,
+            artifacts_dir=artifacts_dir,
+        )
+    except (ConversionFailure, ValueError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Audit passed: {quality.achieved_level} / {profile}")
+    if report:
+        click.echo(f"Quality report: {report}")
 
 
 @cli.group()
