@@ -1,6 +1,5 @@
 """Document conversion via isolated LibreOffice / Pandoc processes."""
 
-import os
 import shutil
 import subprocess
 import tempfile
