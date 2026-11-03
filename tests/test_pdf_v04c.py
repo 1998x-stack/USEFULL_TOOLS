@@ -234,3 +234,19 @@ def test_real_pdf_render_has_nonempty_raster(cjk_markdown, tmp_path):
         assert first.height >= 700
         # RGB pixels must contain actual ink; a blank page alone is invalid.
         assert any(channel < 180 for channel in first.samples[::3])
+
+
+@pytest.mark.pdf_integration
+def test_real_table_preserves_three_horizontal_columns(cjk_markdown, tmp_path):
+    """Regression: a blank python-docx reference collapses table columns."""
+    _requirements()
+    output = tmp_path / "table.pdf"
+    markdown_to_pdf(str(cjk_markdown), str(output))
+    with fitz.open(str(output)) as pdf:
+        found = []
+        for value in ("名称", "结果"):
+            positions = [box for page in pdf for box in page.search_for(value)]
+            assert positions, f"Table header missing: {value}"
+            found.append(positions[0])
+        assert abs(found[0].y0 - found[1].y0) <= 8
+        assert found[0].x0 < found[1].x0
