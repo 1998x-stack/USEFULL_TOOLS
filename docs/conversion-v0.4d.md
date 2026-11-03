@@ -1,6 +1,6 @@
 # V0.4-D — Approved Visual Golden Dataset and Regression Gate
 
-Status: implemented on stacked PR #6, based on V0.4-C PR #5 (in turn PR #4 and #3).
+Status: golden snapshots independently reviewed and committed; verification-only CI is the active release gate. Stacked on V0.4-C PR #5 (in turn PR #4 and #3).
 
 ## Objective
 

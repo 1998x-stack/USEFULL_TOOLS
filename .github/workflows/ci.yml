@@ -83,16 +83,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev,all]"
 
-      - name: Prepare candidate visual snapshots for independent approval
+      - name: Verify separately approved visual golden references
         run: |
-          python -m devkit.convert.visual_cli candidate \
+          python -m devkit.convert.visual_cli verify \
             --manifest tests/fixtures/visual_v04d/manifest.json \
-            --out-dir "$RUNNER_TEMP/visual-golden-candidate" --emit-base64
+            --out-dir "$RUNNER_TEMP/visual-golden-verification"
 
-      - name: Upload candidate snapshots and evidence
+      - name: Verify real PDF golden suite through pytest
+        run: pytest tests/test_visual_v04d.py -v --tb=short -m visual_integration
+
+      - name: Upload report, actual images and red-highlighted diffs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: visual-golden-candidates
-          path: ${{ runner.temp }}/visual-golden-candidate/
+          name: visual-golden-report
+          path: ${{ runner.temp }}/visual-golden-verification/
           if-no-files-found: warn
