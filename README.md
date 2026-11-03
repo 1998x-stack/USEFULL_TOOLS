@@ -23,7 +23,16 @@ CJK-aware LibreOffice rendering, and independently approved PDF visual baselines
 See [architecture](docs/conversion-v0.4.md),
 [DOCX contract](docs/conversion-v0.4b.md),
 [CJK PDF quality](docs/conversion-v0.4c.md), and
-[visual golden review](docs/conversion-v0.4d.md).
+[visual golden review](docs/conversion-v0.4d.md), and
+[quality modes, audits & reports](docs/conversion-v0.4e.md).
+
+Conversion quality and read-only auditing examples:
+
+~~~bash
+devkit convert md2docx notes.md --profile standard --report notes-quality.json -o notes.docx
+devkit convert md2pdf notes.md --profile standard --report pdf-quality.json -o notes.pdf
+devkit convert audit notes.md notes.pdf --profile standard --report existing-audit.json
+~~~
 
 Pandoc, LibreOffice Writer and installed CJK fonts are *system dependencies* for
 PDF fidelity. The Python `convert` optional extra installs Python libraries only.

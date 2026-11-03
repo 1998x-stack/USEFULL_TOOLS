@@ -1,3 +1,6 @@
+> **Integration note:** V0.4-A through V0.4-E are consolidated into the
+> new quality release PR based on V0.3 main. Historic PR #3–#6 are superseded.
+
 # V0.4 Document Conversion Fidelity — Design and Acceptance Plan
 
 Status: incremental. V0.4-A is open as PR #3; V0.4-B is a stacked PR with a dedicated Markdown AST and golden DOCX suite.
@@ -58,7 +61,7 @@ devkit/convert/
 | V0.4-B | Markdown intermediate structure and DOCX renderer | Implemented on stacked branch; real Pandoc golden tests and OOXML checks |
 | V0.4-C | Markdown/PDF renderer and CJK fonts | Text selectable and extractable, no missing Chinese glyphs |
 | V0.4-D | Independent rendering and structural fixtures | PR #6: approved visual PNGs, engine lock, per-region diff and fail-closed CI |
-| V0.4-E | Diagnostics and fidelity profiles | Explain engine, unsupported features and confidence/quality gates |
+| V0.4-E | Diagnostics and fidelity profiles | Implemented; documented JSON schema, fast/standard/strict and read-only CLI/API audit |
 
 ## Future DocumentIR data contract
 

@@ -62,7 +62,7 @@ jobs:
           pip install -e ".[dev,all]"
 
       - name: Real CJK PDF generation and raster regression tests
-        run: pytest tests/test_pdf_v04c.py -v --tb=short -m pdf_integration
+        run: pytest tests/test_pdf_v04c.py tests/test_quality_v04e.py -v --tb=short -m pdf_integration
 
   visual-golden:
     runs-on: ubuntu-24.04
@@ -90,7 +90,7 @@ jobs:
             --out-dir "$RUNNER_TEMP/visual-golden-verification"
 
       - name: Verify real PDF golden suite through pytest
-        run: pytest tests/test_visual_v04d.py -v --tb=short -m visual_integration
+        run: pytest tests/test_visual_v04d.py tests/test_quality_v04e.py -v --tb=short -m visual_integration
 
       - name: Upload report, actual images and red-highlighted diffs
         if: always()
