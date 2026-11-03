@@ -8,11 +8,11 @@ from devkit.ai.prompt_template import save_template, load_template, list_templat
 
 
 def test_numbered_file_with_different_content_is_never_deleted(tmp_path):
-    (tmp_path / 'record.txt').write_text('original')
-    (tmp_path / 'record (1).txt').write_text('different')
+    (tmp_path / 'record.txt').write_text('ABCDEFGH')
+    (tmp_path / 'record (1).txt').write_text('abcdefgh')
     assert find_duplicates(str(tmp_path), ['*.txt']) == []
     assert remove_duplicates(str(tmp_path), ['*.txt'], dry_run=False) == []
-    assert (tmp_path / 'record (1).txt').read_text() == 'different'
+    assert (tmp_path / 'record (1).txt').read_text() == 'abcdefgh'
 
 
 def test_identical_numbered_copy_is_removed(tmp_path):
@@ -103,3 +103,23 @@ def test_valid_templates_and_jinja(tmp_path):
     assert load_template('test_01', str(tmp_path)) == 'hello'
     assert list_templates(str(tmp_path)) == ['test_01']
     assert render_template('{{ name }}', {'name': 'Alice'}) == 'Alice'
+
+
+def test_rename_rollback_on_second_destination_failure(tmp_path, monkeypatch):
+    import importlib
+    module = importlib.import_module('devkit.files.batch_rename')
+    (tmp_path / 'a.txt').write_text('A')
+    (tmp_path / 'b.txt').write_text('B')
+    original_rename = module.os.rename
+
+    def fail_once(source, destination):
+        if str(source).split('/')[-1].startswith('.devkit-rename-') and str(destination).endswith('file_02.txt'):
+            raise OSError('injected final rename failure')
+        return original_rename(source, destination)
+
+    monkeypatch.setattr(module.os, 'rename', fail_once)
+    with pytest.raises(OSError, match='injected'):
+        module.batch_rename(str(tmp_path), 'file_{n:02d}.txt', dry_run=False)
+    assert (tmp_path / 'a.txt').read_text() == 'A'
+    assert (tmp_path / 'b.txt').read_text() == 'B'
+    assert not any(p.name.startswith('.devkit-rename-') for p in tmp_path.iterdir())

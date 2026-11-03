@@ -44,7 +44,9 @@ def load_template(name: str, prompts_dir: Optional[str] = None) -> Optional[str]
     path = _template_path(name, prompts_dir)
     if not os.path.isfile(path):
         return None
-    with open(path, "r", encoding="utf-8") as stream:
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(path, flags)
+    with os.fdopen(fd, "r", encoding="utf-8") as stream:
         return stream.read()
 
 
