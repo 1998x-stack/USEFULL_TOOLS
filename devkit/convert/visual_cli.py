@@ -63,6 +63,7 @@ def run_suite(manifest_path, out_dir, mode, emit_base64=False):
                     page.save(file, optimize=True)
                     hashes.append(_digest(file))
                     if emit_base64:
+                        print(f"GOLDENHASH:{name}:{hashes[-1]}", flush=True)
                         encoded = base64.b64encode(file.read_bytes()).decode("ascii")
                         print(f"GOLDENPNG:{name}:{encoded}", flush=True)
                 if emit_base64:
