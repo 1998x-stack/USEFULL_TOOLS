@@ -1,29 +1,47 @@
-"""Merge multiple PDF files."""
+"""Safely merge PDF files using maintained pypdf APIs."""
 
 import os
+import tempfile
+from pathlib import Path
+
+from devkit.convert._safe import publish_file, require_distinct, validate_pdf
 
 
 def merge_pdfs(input_dir: str, output_file: str) -> int:
-    """Merge all PDF files in a directory into a single PDF.
+    """Merge eligible PDFs in lexical order, excluding an existing destination.
 
-    Requires: PyPDF2 (pip install devkit-tools[convert])
+    Returns the number of source PDFs (not the page count); empty directories
+    preserve the previous output and return zero.
     """
     try:
-        from PyPDF2 import PdfMerger
-    except ImportError:
-        raise ImportError("PyPDF2 is required: pip install devkit-tools[convert]")
-
-    pdf_files = sorted(f for f in os.listdir(input_dir) if f.lower().endswith(".pdf"))
-    if not pdf_files:
+        from pypdf import PdfWriter
+    except ImportError as exc:
+        raise ImportError("pypdf is required: pip install -e '.[convert]'") from exc
+    directory = Path(input_dir)
+    if not directory.is_dir():
+        raise NotADirectoryError(str(directory))
+    candidates = []
+    for path in sorted(directory.iterdir()):
+        if path.suffix.lower() != ".pdf" or not path.is_file():
+            continue
+        if os.path.realpath(path) == os.path.realpath(output_file):
+            continue
+        if os.path.exists(output_file) and os.path.samefile(path, output_file):
+            continue
+        candidates.append(path)
+    if not candidates:
         return 0
+    require_distinct(candidates, output_file)
 
-    merger = PdfMerger()
-    for pdf_file in pdf_files:
-        merger.append(os.path.join(input_dir, pdf_file))
-
-    os.makedirs(os.path.dirname(output_file) or ".", exist_ok=True)
-    with open(output_file, "wb") as f:
-        merger.write(f)
-    merger.close()
-
-    return len(pdf_files)
+    writer = PdfWriter()
+    try:
+        for source in candidates:
+            writer.append(str(source))
+        with tempfile.TemporaryDirectory(prefix="devkit-merge-") as directory_tmp:
+            staged = Path(directory_tmp) / "merged.pdf"
+            writer.write(str(staged))
+            validate_pdf(staged)
+            publish_file(staged, output_file, candidates, validator=validate_pdf)
+    finally:
+        writer.close()
+    return len(candidates)
