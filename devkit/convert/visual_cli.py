@@ -49,10 +49,12 @@ def run_suite(manifest_path, out_dir, mode, emit_base64=False):
             markdown_to_pdf(str(markdown), str(target))
             pages = render_pages(target, dpi=config["dpi"], max_pages=config["max_pages"])
             overlaps = inspect_line_overlaps(target)
-            if overlaps:
+            if overlaps and mode == "verify":
                 raise ValueError(
                     f"{identifier}: {len(overlaps)} substantive overlapping text-line pair(s)"
                 )
+            if emit_base64 and mode == "candidate":
+                print(f"GOLDENOVERLAPS:{identifier}:{json.dumps(overlaps)}", flush=True)
             if mode == "candidate":
                 hashes = []
                 for index, page in enumerate(pages, 1):
@@ -67,7 +69,7 @@ def run_suite(manifest_path, out_dir, mode, emit_base64=False):
                     print(f"GOLDENENV:{json.dumps(environment, sort_keys=True)}", flush=True)
                 result["cases"].append({
                     "id": identifier, "status": "candidate", "expected_pages": len(pages),
-                    "sha256": hashes, "environment": environment,
+                    "sha256": hashes, "environment": environment, "overlaps": overlaps,
                 })
             else:
                 result["cases"].append(evaluate_pages(case, pages, manifest, golden_root, out_dir))

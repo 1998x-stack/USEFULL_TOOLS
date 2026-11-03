@@ -99,7 +99,7 @@ def test_region_specific_gate_catches_small_table_shift():
 
 
 def test_region_geometry_validation():
-    with pytest.raises(ValueError, match="normalized rect"):
+    with pytest.raises(ValueError, match="normalized region"):
         _clip_rect({"rect": [-0.1, 0.2, 0.5, 0.5]}, (200, 100))
     with pytest.raises(ValueError, match="numeric"):
         _clip_rect({"rect": [0, "bad", 0.5, 0.5]}, (200, 100))
@@ -136,7 +136,7 @@ def test_approved_png_changes_require_new_hash_approval(tmp_path):
 def test_missing_png_is_not_created_during_verify(tmp_path):
     approved, case, manifest = _approved(tmp_path)
     (approved / "sample-p01.png").unlink()
-    with pytest.raises(FileNotFoundError, match="Golden"):
+    with pytest.raises(FileNotFoundError, match="golden PNG missing"):
         evaluate_pages(case, [_image()], manifest, approved, tmp_path)
     assert list(approved.iterdir()) == []
 
@@ -152,7 +152,7 @@ def test_actual_visual_change_creates_red_highlight_diff(tmp_path):
     result = evaluate_pages(case, [_image(shift=12)], manifest, approved, tmp_path)
     assert result["status"] == "fail"
     with Image.open(tmp_path / "sample-p01-diff.png") as diff:
-        assert (245, 45, 48) in diff.getdata()
+        assert diff.getpixel((22, 40)) == (245, 45, 48) or diff.getpixel((140, 40)) == (245, 45, 48)
 
 
 def test_invalid_manifest_rejected(tmp_path):
