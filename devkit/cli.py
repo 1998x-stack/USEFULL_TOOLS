@@ -102,10 +102,12 @@ def convert_md2pdf(input_path, output):
 @convert.command("md2docx")
 @click.argument("input_path")
 @click.option("-o", "--output", default=None, help="Output DOCX path")
-def convert_md2docx(input_path, output):
+@click.option("--reference-doc", default=None, type=click.Path(exists=True, dir_okay=False),
+              help="Reference DOCX to supply Word styles and page setup")
+def convert_md2docx(input_path, output, reference_doc):
     """Convert Markdown to DOCX."""
     from devkit.convert.md2docx import markdown_to_docx
-    result = markdown_to_docx(input_path, output)
+    result = markdown_to_docx(input_path, output, reference_doc=reference_doc)
     click.echo(f"Converted: {result}")
 
 
@@ -113,10 +115,12 @@ def convert_md2docx(input_path, output):
 @click.argument("input_path")
 @click.option("--to", "to_format", required=True, type=click.Choice(["pdf", "md", "docx"]))
 @click.option("-o", "--output", default=None, help="Output path")
-def convert_doc(input_path, to_format, output):
+@click.option("--reference-doc", default=None, type=click.Path(exists=True, dir_okay=False),
+              help="Reference DOCX when converting Markdown to Word")
+def convert_doc(input_path, to_format, output, reference_doc):
     """Convert between document formats (requires LibreOffice/Pandoc)."""
     from devkit.convert.doc_convert import convert_document
-    result = convert_document(input_path, to_format, output)
+    result = convert_document(input_path, to_format, output, reference_doc=reference_doc)
     if result:
         click.echo(f"Converted: {result}")
     else:

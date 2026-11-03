@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-from devkit.convert._safe import publish_file, validate_docx, validate_pdf
+from devkit.convert._safe import publish_file, validate_pdf
 
 
 def _executable(*candidates):
@@ -25,7 +25,10 @@ def _run(command, timeout=120):
         raise RuntimeError(f"Document conversion failed (exit {completed.returncode}): {detail}")
 
 
-def convert_document(input_path: str, to_format: str, output_path: Optional[str] = None) -> Optional[str]:
+def convert_document(
+    input_path: str, to_format: str, output_path: Optional[str] = None,
+    reference_doc: Optional[str] = None,
+) -> Optional[str]:
     """Convert Word->PDF, Word->Markdown, or Markdown->DOCX.
 
     Unsupported pairs retain the previous None return convention.
@@ -36,7 +39,7 @@ def convert_document(input_path: str, to_format: str, output_path: Optional[str]
     if ext in (".docx", ".doc") and to_format == "md":
         return _word_to_markdown(input_path, output_path)
     if ext == ".md" and to_format == "docx":
-        return _markdown_to_word(input_path, output_path)
+        return _markdown_to_word(input_path, output_path, reference_doc=reference_doc)
     return None
 
 
@@ -79,15 +82,9 @@ def _word_to_markdown(input_path: str, output_path: Optional[str] = None) -> str
         return publish_file(produced, destination, [source])
 
 
-def _markdown_to_word(input_path: str, output_path: Optional[str] = None) -> str:
-    binary = _executable("pandoc")
-    source = Path(input_path).absolute()
-    if not source.is_file():
-        raise FileNotFoundError(str(source))
-    destination = output_path or str(source.with_suffix(".docx"))
-    with tempfile.TemporaryDirectory(prefix="devkit-pandoc-") as directory:
-        produced = Path(directory) / "output.docx"
-        _run([binary, str(source), "-f", "gfm", "-o", str(produced)])
-        if not produced.is_file():
-            raise RuntimeError("Pandoc did not produce DOCX")
-        return publish_file(produced, destination, [source], validator=validate_docx)
+def _markdown_to_word(input_path: str, output_path: Optional[str] = None,
+                      reference_doc: Optional[str] = None) -> str:
+    """Use the same verified conversion path as devkit convert md2docx."""
+    from devkit.convert.md2docx import markdown_to_docx
+
+    return markdown_to_docx(input_path, output_path, reference_doc=reference_doc)
