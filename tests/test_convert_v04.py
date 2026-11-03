@@ -165,16 +165,28 @@ def test_doc_to_markdown_honors_custom_destination(tmp_path, monkeypatch):
 
 
 def test_markdown_to_docx_requires_real_document_part(tmp_path, monkeypatch):
+    from devkit.convert.ir import from_pandoc_ast
+    import devkit.convert.md2docx as md_module
+
     source = tmp_path / "source.md"
     source.write_text("# Demo", encoding="utf-8")
     target = tmp_path / "converted.docx"
-    monkeypatch.setattr(doc_convert, "_executable", lambda *args: "pandoc")
+    ast = {"pandoc-api-version": [1, 23, 1], "meta": {}, "blocks": [
+        {"t": "Header", "c": [1, ["", [], []], [{"t": "Str", "c": "Demo"}]]},
+    ]}
 
-    def mock_run(command, timeout=120):
-        with zipfile.ZipFile(command[-1], "w") as archive:
-            archive.writestr("other.txt", "invalid")
+    class FakeEngine:
+        def parse_markdown(self, path):
+            return from_pandoc_ast(ast)
 
-    monkeypatch.setattr(doc_convert, "_run", mock_run)
+        def check_local_media(self, ir, path):
+            return None
+
+        def write_docx(self, ir, output_path, path, reference_doc=None):
+            with zipfile.ZipFile(output_path, "w") as archive:
+                archive.writestr("other.txt", "invalid")
+
+    monkeypatch.setattr(md_module, "PandocEngine", lambda: FakeEngine())
     with pytest.raises(ValueError, match="Missing DOCX"):
         doc_convert.convert_document(str(source), "docx", str(target))
     assert not target.exists()

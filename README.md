@@ -105,7 +105,7 @@ pytest tests/ -v
 | `convert pdf-merge` | Merge all PDFs in a directory | `devkit convert pdf-merge ./pdfs -o merged.pdf` |
 | `convert pdf-compress` | Compress PDF via Ghostscript | `devkit convert pdf-compress large.pdf --quality ebook` |
 | `convert md2pdf` | Markdown to PDF | `devkit convert md2pdf README.md -o readme.pdf` |
-| `convert md2docx` | Markdown to DOCX | `devkit convert md2docx README.md -o readme.docx` |
+| `convert md2docx` | Markdown to DOCX (Pandoc AST + structural validation) | `devkit convert md2docx README.md -o readme.docx` |
 | `convert mp4-to-mp3` | Extract audio from video | `devkit convert mp4-to-mp3 video.mp4` |
 | `convert webp-to-png` | WebP to PNG conversion | `devkit convert webp-to-png image.webp` |
 | `convert resize` | Resize images | `devkit convert resize photo.jpg 800x600` |

@@ -21,6 +21,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install Pandoc for real document E2E tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends pandoc
+          pandoc --version | head -n 1
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
