@@ -1,7 +1,8 @@
 # V0.4-E — Conversion quality profiles, audit API and JSON evidence
 
-Release scope: V0.4-A/B/C/D/E in a single PR based on the **current main**,
-preserving V0.3 validated data processing and its tests.
+Status: V0.4-A–E were merged into `main` through
+[PR #7](https://github.com/1998x-stack/USEFULL_TOOLS/pull/7).
+V0.3 data processing remains intact; distribution metadata is still `0.1.0`.
 
 ## Why profiles are explicit
 
@@ -91,8 +92,8 @@ overwriting it or re-running Pandoc/LibreOffice to regenerate the output.
    verified against their SHA-256 hash manifest and engine/font lock.
 5. V0.4-E quality profiles and failure reports are verified with fault
    injections and real PDF/DOCX integration tests.
-6. A single consolidated PR diff is reviewed against the latest main;
-   no old V0.3 implementation is restored.
+6. Merged PR #7 preserved all V0.3 data processing and consolidated the V0.4
+   changes into one branch before merging.
 
 ## Explicit non-guarantees
 
