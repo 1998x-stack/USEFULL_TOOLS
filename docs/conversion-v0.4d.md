@@ -1,6 +1,7 @@
 # V0.4-D — Approved Visual Golden Dataset and Regression Gate
 
-Status: golden snapshots independently reviewed and committed; verification-only CI is the active release gate. Stacked on V0.4-C PR #5 (in turn PR #4 and #3).
+Status: six approved PNG snapshots and read-only visual CI have been merged
+into `main` through [PR #7](https://github.com/1998x-stack/USEFULL_TOOLS/pull/7).
 
 ## Objective
 
@@ -35,9 +36,9 @@ diagram authored specifically for the fixture.
       --manifest tests/fixtures/visual_v04d/manifest.json \
       --out-dir /tmp/candidate-goldens
 
-The candidate output includes PNGs, intermediate rendered PDFs, and JSON/HTML
-reports. The CI candidate job can emit base64 PNG blobs for controlled
-review/approval; this option is not available in verification mode.
+Candidate mode produces PNGs, rendered PDFs and JSON/HTML evidence. Optional
+`--emit-base64` is only for an explicit candidate review workflow; normal CI
+runs **verify**, never automatic candidate approval.
 
 **Verify approved baseline (read-only):**
 
@@ -100,13 +101,11 @@ security guarantee. UI-style alignment or SSIM normalization would risk
 hiding small but important positioning changes, so this version compares
 unshifted pages. More sophisticated perceptual scores are future work.
 
-## PR workflow
+## Updating golden baselines
 
-- PR #3: V0.4-A baseline conversion safety.
-- PR #4: V0.4-B Pandoc AST + structure-aware DOCX.
-- PR #5: V0.4-C CJK-aware PDF and content/raster checks.
-- PR #6: V0.4-D immutable visual goldens, regional diagnostics and regression gate.
-
-Each PR must be merged or rebased in dependency order. PR #6 is considered
-fully accepted only when its approved snapshots are reviewed and its dedicated
-read-only visual integration CI succeeds.
+The historical stacked PRs #3–#6 were closed and replaced by merged PR #7.
+The current CI runs read-only verification of the approved golden assets.
+For an intentional layout change, generate candidate screenshots manually,
+inspect all pages and changes, then approve the updated images, SHA-256 hashes,
+page count and renderer/font lock in a **separate reviewed commit**. Do not
+auto-accept changed baselines on CI failure.

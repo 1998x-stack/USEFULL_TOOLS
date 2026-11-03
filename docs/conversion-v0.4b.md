@@ -1,6 +1,6 @@
 # V0.4-B — Structure-aware Markdown → DOCX
 
-Status: delivered on stacked feature branch pending CI and review.
+Status: merged into `main` via [PR #7](https://github.com/1998x-stack/USEFULL_TOOLS/pull/7).
 
 ## Rationale
 
@@ -71,10 +71,11 @@ PNG. The test suite opens the resulting DOCX using python-docx and inspects
 OOXML directly for the hyperlink target, styles, table cells, numbering, and
 embedded media.
 
-The minimum production integrity gate compares source AST element counts to
-the generated OOXML for headings, tables, links and images. Text-level recall,
-loss of CSS, precise numbered-list level, equation positioning, true visual
-comparison and PDF rendering are explicitly deferred to V0.4-C/D.
+The minimum converter integrity gate compares source AST node counts against
+OOXML headings, tables, links and images. The merged `strict` DOCX profile
+also checks bold/italic runs and Pandoc DOCX text read-back against the
+source. This is **L2**, not visual L3. Full list-level semantics, complex
+equations, CSS style parity and exact pagination are not guaranteed.
 
 ## API
 
@@ -95,8 +96,8 @@ FileNotFoundError instead of generating a partially styled result.
 ## Known limitations and next work
 
 - Structural validation is selective, not a full semantic equivalence proof.
-- Lists and bold/italic are independently checked by golden tests but not yet
-  blocked by a per-document production quality gate.
+- Lists are exercised by golden tests; strict DOCX additionally rejects
+  missing bold/italic run counts, but full numbering-level parity remains unproven.
 - GFM Markdown does not represent every possible Word feature, notably complex
   merged-table authoring or full pagination/style controls.
 - Pandoc's native AST format can change across versions. Persist its
@@ -104,5 +105,5 @@ FileNotFoundError instead of generating a partially styled result.
 - The new command executes Pandoc locally; image assets must be trusted input
   under the source directory. For processing hostile HTML/Markdown at scale,
   process isolation and memory limits should be added before a hosted service.
-- CJK font embedding, visual rasterization, MathML and PDF rendering remain
-  in V0.4-C/D; passing V0.4-B does not claim visual fidelity.
+- CJK PDF rendering and approved PDF visual goldens are covered by V0.4-C/D;
+  DOCX conversion itself does not claim a visual L3 baseline.

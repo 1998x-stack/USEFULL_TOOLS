@@ -1,6 +1,6 @@
 # V0.4-C — CJK-aware Markdown → PDF Renderer
 
-Status: stacked implementation awaiting CI and review.
+Status: merged into `main` via [PR #7](https://github.com/1998x-stack/USEFULL_TOOLS/pull/7).
 
 ## Pipeline
 
@@ -23,7 +23,7 @@ HTML layout engine and it does not execute a browser or fetch internet resources
 
 ~~~bash
 devkit convert md2pdf input.md -o result.pdf
-devkit convert md2pdf input.md --font-family "Noto Sans CJK SC" --min-text-recall 0.99
+devkit convert md2pdf input.md --font-family "Noto Sans CJK SC" --min-text-recall 0.999
 ~~~
 
 ~~~python
@@ -58,14 +58,13 @@ Ubuntu, a suitable option is fonts-noto-cjk.
   cannot find invisible characters whose PDF streams were already removed.
 - A font CMap containing a codepoint is only an initial preflight. Rendering
   engines can still choose another fallback font or alter glyph shapes.
-- A raster with visible pixels can contain overlap, poor layout or missing
-  background elements. V0.4-D will add human-reviewed and region-level
-  visual golden baselines.
+- Visible pixels alone do not prove a correct layout. V0.4-D now adds
+  independently approved region-level snapshots for its two fixed fixtures.
 - Output page count is limited by default to 100 to bound validation work.
 - Fontconfig discovery on Linux is tested in CI; other platforms require
   separately verified font and LibreOffice availability.
 - The generated DOCX has no stable visual layout across OS/font/backend
-  versions. CI pins the Ubuntu package environment for the integration job,
-  and future V0.4-D will record installed engine versions and pixel baselines.
+  versions. V0.4-D records engine/font versions, font file hashes and
+  approved pixel baselines in its locked Ubuntu CI environment.
 - SVG, remote media, mathematics, complex merged tables, RTL scripts and
   accessibility-tagged PDF do not have full fidelity guarantees in V0.4-C.
