@@ -6,7 +6,7 @@ import os
 import tempfile
 from typing import Iterator, List, TextIO
 
-from devkit.data.io import atomic_text_output, ensure_distinct_output
+from devkit.data.io import atomic_text_output
 
 
 def _read_header(reader, source: str) -> List[str]:

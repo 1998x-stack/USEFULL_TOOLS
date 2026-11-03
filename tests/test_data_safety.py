@@ -281,5 +281,6 @@ def test_atomic_outputs_replace_after_success(tmp_path):
     _csv(a, [["name"], ["A"]])
     out.write_text("OLD")
     merge_csvs([str(a)], str(out))
-    assert out.read_text().startswith("name\nA")
+    with out.open(newline="") as f:
+        assert list(csv.reader(f)) == [["name"], ["A"]]
     assert not list(tmp_path.glob(".devkit-write-*"))
