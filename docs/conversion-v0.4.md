@@ -1,6 +1,6 @@
 # V0.4 Document Conversion Fidelity — Design and Acceptance Plan
 
-Status: incremental. V0.4-A is the initial independently reviewable conversion-safety change.
+Status: incremental. V0.4-A is open as PR #3; V0.4-B is a stacked PR with a dedicated Markdown AST and golden DOCX suite.
 
 ## Three-level product contract
 
@@ -55,7 +55,7 @@ devkit/convert/
 | PR | Topic | Gate |
 |---|---|---|
 | V0.4-A | Output safety, custom paths, isolated LO, pypdf migration | Valid output, no source overwrite, CI 3.9–3.12 |
-| V0.4-B | Markdown intermediate structure and DOCX renderer | Heading, bold, hyperlinks, lists, code, tables, images golden cases |
+| V0.4-B | Markdown intermediate structure and DOCX renderer | Implemented on stacked branch; real Pandoc golden tests and OOXML checks |
 | V0.4-C | Markdown/PDF renderer and CJK fonts | Text selectable and extractable, no missing Chinese glyphs |
 | V0.4-D | Independent rendering and structural fixtures | Reproducible baseline and documented tolerated deviations |
 | V0.4-E | Diagnostics and fidelity profiles | Explain engine, unsupported features and confidence/quality gates |

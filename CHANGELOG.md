@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased] — V0.4-B Structure-aware Markdown→DOCX (2026-11-03)
+
+- Pandoc JSON AST as the lossless rendering contract and typed DocumentIR projection.
+- Unified md2docx and doc --to docx CLI pipeline with optional --reference-doc.
+- Strict local-image preflight and independent DOCX structural integrity checks.
+- Golden end-to-end tests for headings, paragraphs, inline formatting, links,
+  nested lists, tables, media and code across Python 3.9–3.12.
+
 ## [0.1.0] - 2026-03-28
 
 ### Added
