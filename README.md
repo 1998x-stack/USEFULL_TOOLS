@@ -14,6 +14,8 @@
 
 ---
 
+Conversion roadmap: [V0.4 fidelity design and acceptance plan](docs/conversion-v0.4.md). Initial V0.4-A fixes output safety and document integrity; structural and visual fidelity are separate phases.
+
 ## Features
 
 | Category | Tools | Description |
