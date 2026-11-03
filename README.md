@@ -14,34 +14,74 @@
 
 ---
 
-See [V0.3 Data Contracts](docs/data-contracts-v0.3.md) for validation, output safety, and JSON path escaping.
+## Documentation & release status
 
-## V0.4 Document conversion (under review)
+**V0.4-A–E is merged into `main`.** It adds validated document conversion,
+structure-aware Markdown → DOCX, CJK-aware PDF generation, approved visual
+goldens, and machine-readable quality reports. The packaging metadata still
+declares version **`0.1.0`**; this is a repository feature milestone, not
+a newly published PyPI release.
 
-Markdown → DOCX and PDF now use Pandoc's structured AST, validated DOCX,
-CJK-aware LibreOffice rendering, and independently approved PDF visual baselines.
-See [architecture](docs/conversion-v0.4.md),
-[DOCX contract](docs/conversion-v0.4b.md),
-[CJK PDF quality](docs/conversion-v0.4c.md), and
-[visual golden review](docs/conversion-v0.4d.md), and
-[quality modes, audits & reports](docs/conversion-v0.4e.md).
+- [中文版 README](README_CN.md) · [Documentation index](docs/README.md)
+- [V0.3 data contracts](docs/data-contracts-v0.3.md) · [V0.4 architecture](docs/conversion-v0.4.md)
+- [Structure-aware DOCX](docs/conversion-v0.4b.md) · [CJK PDF](docs/conversion-v0.4c.md)
+- [Visual golden review](docs/conversion-v0.4d.md) · [Quality profiles and API](docs/conversion-v0.4e.md)
+- [Quality report JSON Schema](schemas/conversion-report-v1.schema.json) · [Safety](docs/SAFETY.md)
 
-Conversion quality and read-only auditing examples:
+### Conversion quick path
 
-~~~bash
-devkit convert md2docx notes.md --profile standard --report notes-quality.json -o notes.docx
-devkit convert md2pdf notes.md --profile standard --report pdf-quality.json -o notes.pdf
-devkit convert audit notes.md notes.pdf --profile standard --report existing-audit.json
-~~~
+Clone the repository and install the conversion extra:
 
-Pandoc, LibreOffice Writer and installed CJK fonts are *system dependencies* for
-PDF fidelity. The Python `convert` optional extra installs Python libraries only.
+```bash
+git clone https://github.com/1998x-stack/USEFULL_TOOLS.git
+cd USEFULL_TOOLS
+python -m pip install -e ".[convert]"
 
+# Linux/Ubuntu system backends for DOCX, PDF and CJK rendering
+sudo apt-get update
+sudo apt-get install -y pandoc libreoffice-writer fontconfig fonts-noto-cjk
+
+# Use the bundled local Markdown fixture
+devkit convert md2docx examples/sample_data/sample.md -o /tmp/sample.docx \
+  --profile standard --report /tmp/sample-docx-quality.json
+devkit convert md2pdf examples/sample_data/sample.md -o /tmp/sample.pdf \
+  --profile standard --report /tmp/sample-pdf-quality.json
+devkit convert audit examples/sample_data/sample.md /tmp/sample.docx \
+  --profile standard --report /tmp/sample-audit.json
+```
+
+On other systems, install the corresponding Pandoc, LibreOffice and font
+backends separately. Ghostscript (`gs`) is required for PDF compression;
+FFmpeg for audio conversion. The Python extra does **not** install these executables.
+
+### Fidelity profiles
+
+| Profile | Markdown → DOCX | Markdown → PDF |
+|---|---|---|
+| `fast` | Valid output; essential renderer checks remain enabled | Valid PDF; essential Unicode/image safety remains enabled |
+| `standard` (default) | Independent OOXML structure checks (L2) | Independent text, glyph, image and page checks (L2) |
+| `strict` | L2 plus formatting and text read-back checks | L3 **only with an approved matching source, visual baseline and locked environment** |
+
+Strict mode does not silently lower its requirements. A missing or mismatched
+approved PDF baseline fails rather than claiming visual fidelity. These checks
+do not guarantee universal pixel-identical, accessible, PDF/A or equation-perfect output.
+
+```bash
+# Strict PDF only for an approved golden fixture, in its locked renderer environment
+devkit convert md2pdf tests/fixtures/visual_v04d/cjk-layout.md \
+  --profile strict -o /tmp/cjk-verified.pdf \
+  --visual-manifest tests/fixtures/visual_v04d/manifest.json \
+  --visual-case cjk-layout --artifacts-dir /tmp/visual-evidence \
+  --report /tmp/cjk-quality.json
+```
+
+See [V0.4-E](docs/conversion-v0.4e.md) for the Python API, JSON report fields,
+read-only audit and publication boundaries.
 ## Features
 
 | Category | Tools | Description |
 |----------|-------|-------------|
-| **Convert** | 9 tools | PDF merge/compress, Markdown to PDF/DOCX, media conversion, image resize |
+| **Convert** | 9 tools | PDF merge/compress, Markdown to PDF/DOCX, read-only audit, media conversion, image resize |
 | **Text** | 4 tools | Information-entropy text length, keyword extraction, sentence splitting, tokenizer |
 | **Files** | 4 tools | Duplicate finder, log search, code extractor, batch rename |
 | **AI** | 4 tools | Token counter, prompt templates, cost calculator, model comparison |
@@ -88,18 +128,16 @@ devkit ai cost --model gpt-4o --input-tokens 1000 --output-tokens 500
 
 ## Installation
 
-### From source (core tools)
+### Core installation
 
 ```bash
 python -m pip install -e .
 ```
 
-### From Source
+### All Python extras (does not install system converters)
 
 ```bash
-git clone https://github.com/1998x-stack/USEFULL_TOOLS.git
-cd USEFULL_TOOLS
-pip install -e ".[all]"
+python -m pip install -e ".[all]"
 ```
 
 ### Development Setup
@@ -130,7 +168,8 @@ pytest tests/ -v
 | `convert mp4-to-mp3` | Extract audio from video | `devkit convert mp4-to-mp3 video.mp4` |
 | `convert webp-to-png` | WebP to PNG conversion | `devkit convert webp-to-png image.webp` |
 | `convert resize` | Resize images | `devkit convert resize photo.jpg 800x600` |
-| `convert doc` | Convert between document formats | `devkit convert doc report.docx --to pdf` |
+| `convert doc` | Convert supported formats with quality profiles | `devkit convert doc notes.md --to pdf --profile standard -o notes.pdf` |
+| `convert audit` | Read-only audit of a converted document | `devkit convert audit notes.md notes.docx --profile standard` |
 
 #### System Requirements
 
@@ -138,7 +177,10 @@ Some conversion tools require external programs:
 
 - **PDF compress:** [Ghostscript](https://ghostscript.com/) (`gs`)
 - **MP4 to MP3:** [FFmpeg](https://ffmpeg.org/) (`ffmpeg`)
-- **Doc convert:** [LibreOffice](https://www.libreoffice.org/) and/or [Pandoc](https://pandoc.org/)
+- **Markdown → DOCX:** [Pandoc](https://pandoc.org/)
+- **DOCX → PDF and Markdown → PDF:** [LibreOffice Writer](https://www.libreoffice.org/); Markdown → PDF also needs Pandoc
+- **CJK PDF text:** `fontconfig` (`fc-match`), installed CJK fonts and Python `fonttools` (in `[convert]`)
+- **Strict visual goldens:** a matching approved fixture and renderer/font environment; see [visual evaluation](docs/conversion-v0.4d.md)
 
 #### Examples
 
@@ -157,6 +199,9 @@ devkit convert resize photo.jpg 300
 
 # Convert between document formats
 devkit convert doc report.docx --to pdf
+
+# Audit an existing file without altering its bytes
+devkit convert audit notes.md notes.docx --profile standard --report quality.json
 ```
 
 </details>
@@ -420,7 +465,7 @@ devkit/
 ├── web/                # Web utilities
 └── dev/                # Developer utilities
 
-tests/                  # pytest test suite (60 tests)
+tests/                  # pytest unit, E2E and golden-regression suites
 examples/sample_data/   # Sample files for testing
 ```
 
@@ -487,4 +532,4 @@ devkit ai cost-compare --input-tokens 10000 --output-tokens 5000
 devkit data csv-merge data1.csv data2.csv -o combined.csv
 ```
 
-完整中文文档请参阅 [README_CN.md](README_CN.md)。
+完整中文文档（含 V0.4 安装、质量模式和审计示例）请参阅 [README_CN.md](README_CN.md)。

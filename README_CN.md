@@ -39,6 +39,57 @@ python -m pip install -e ".[web]"      # 二维码、URL 元数据
 
 ---
 
+## 当前功能与文档
+
+**V0.4-A～E 已合并到 `main`。** 包元数据仍为 `0.1.0`，并不表示已经通过 PyPI 发布了新的版本。
+本仓库的 `devkit-tools` 与 PyPI 上的同名项目不同；请按照下方源码安装命令操作。
+
+- [文档总览](docs/README.md) · [V0.3 数据契约](docs/data-contracts-v0.3.md)
+- [V0.4 转换架构](docs/conversion-v0.4.md) · [DOCX 结构保真](docs/conversion-v0.4b.md)
+- [中文 PDF 与字体](docs/conversion-v0.4c.md) · [视觉黄金基线](docs/conversion-v0.4d.md)
+- [质量模式、Python API 与报告](docs/conversion-v0.4e.md) · [报告 JSON Schema](schemas/conversion-report-v1.schema.json)
+
+### 系统依赖
+
+`.[convert]` 仅安装 Python 库。Markdown → DOCX 需要 **Pandoc**；
+Markdown → PDF 还需要 **LibreOffice Writer**；中文、日文等 PDF 还需要系统中的
+**fontconfig 与 CJK 字体**。PDF 压缩另需 Ghostscript；MP4 转 MP3 另需 FFmpeg。
+
+Ubuntu 示例：
+
+```bash
+python -m pip install -e ".[convert]"
+sudo apt-get update
+sudo apt-get install -y pandoc libreoffice-writer fontconfig fonts-noto-cjk
+```
+
+其他系统需要自行安装对应的可执行程序和字体；不同系统的字体渲染效果不能默认视为完全一致。
+
+### 文档转换质量等级
+
+| 等级 | Markdown → DOCX | Markdown → PDF |
+|---|---|---|
+| `fast` | 格式有效；保留转换器的必需检查 | 格式有效；保留必需的文本与图片安全检查 |
+| `standard`（默认） | 独立检查 OOXML 结构，报告 L2 | 检查 Unicode、图片、缺字与页面边界，报告 L2 |
+| `strict` | 额外进行格式和文本回读，最高 L2 | 必须匹配审核过的固定输入、截图和渲染环境，才报告 L3 |
+
+严格模式缺少经审核的基线时**必须失败**，不会自动放宽验证。它不能保证任意文档在所有系统上视觉完全一致。
+
+```bash
+# 使用仓库内 Markdown 样例生成并验证 DOCX
+devkit convert md2docx examples/sample_data/sample.md \
+  --profile standard -o /tmp/sample.docx --report /tmp/docx-quality.json
+
+# 生成 PDF 并保存质量报告
+devkit convert md2pdf examples/sample_data/sample.md \
+  --profile standard -o /tmp/sample.pdf --report /tmp/pdf-quality.json
+
+# 只读检查已生成的 Word 文档，不重新渲染、不修改输出
+devkit convert audit examples/sample_data/sample.md /tmp/sample.docx \
+  --profile standard --report /tmp/recheck.json
+```
+
+严格 PDF 示例、不可变黄金截图和报告字段详见 [V0.4-E 文档](docs/conversion-v0.4e.md)。
 ## 工具分类
 
 ### 转换工具 (Convert) - 9 个工具
@@ -52,7 +103,8 @@ python -m pip install -e ".[web]"      # 二维码、URL 元数据
 | `convert mp4-to-mp3` | 视频提取音频 | `devkit convert mp4-to-mp3 video.mp4` |
 | `convert webp-to-png` | WebP 转 PNG | `devkit convert webp-to-png image.webp` |
 | `convert resize` | 调整图片大小 | `devkit convert resize photo.jpg 800x600` |
-| `convert doc` | 文档格式转换 | `devkit convert doc report.docx --to pdf` |
+| `convert doc` | 统一格式转换与质量检查 | `devkit convert doc notes.md --to pdf --profile standard` |
+| `convert audit` | 对已有输出进行只读审核 | `devkit convert audit notes.md notes.docx --profile standard` |
 
 ### 文本工具 (Text) - 4 个工具
 
