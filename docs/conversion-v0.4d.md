@@ -69,7 +69,7 @@ straight into `approved/` on a passing run.
 6. Compare named regions with individually stricter thresholds; coordinates
    are normalized so they can be inspected and reviewed.
 7. Inspect geometric overlap between distinct PDF text lines; reject
-   substantive intersections occupying >= 25% of a smaller line's box.
+   substantive intersections occupying >= 25% of a smaller line's box and at least 8pt wide / 4pt high. Very narrow duplicate glyph spans are ignored.
 8. Save page-level actual and red-highlighted difference screenshots,
    summary report JSON, and an HTML table linking those evidence files.
 9. Before comparison, check the golden PNG bytes against the reviewed hashes
