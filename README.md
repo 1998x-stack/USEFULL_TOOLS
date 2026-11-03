@@ -8,7 +8,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python&logoColor=white)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-60%20passed-brightgreen)](tests/)
+[![CI](https://github.com/1998x-stack/USEFULL_TOOLS/actions/workflows/ci.yml/badge.svg)](https://github.com/1998x-stack/USEFULL_TOOLS/actions/workflows/ci.yml)
 
 </div>
 
@@ -30,19 +30,26 @@
 
 ## Quick Start
 
+> **Important:** The `devkit-tools` name on PyPI is maintained by an unrelated project. Install this repository from source, not via `python -m pip install -e .`. See [SAFETY.md](docs/SAFETY.md).
+
+
 ```bash
+# Clone this repository first
+git clone https://github.com/1998x-stack/USEFULL_TOOLS.git
+cd USEFULL_TOOLS
+
 # Install core tools (zero dependencies beyond click)
-pip install devkit-tools
+python -m pip install -e .
 
 # Install with all optional features
-pip install devkit-tools[all]
+python -m pip install -e ".[all]"
 
 # Or install specific feature groups
-pip install devkit-tools[ai]       # Token counting, cost calculator
-pip install devkit-tools[nlp]      # Chinese text processing
-pip install devkit-tools[convert]  # PDF, DOCX, media conversion
-pip install devkit-tools[data]     # Excel support
-pip install devkit-tools[web]      # QR codes, URL metadata
+python -m pip install -e ".[ai]"       # Token counting, cost calculator
+python -m pip install -e ".[nlp]"      # Chinese text processing
+python -m pip install -e ".[convert]"  # PDF, DOCX, media conversion
+python -m pip install -e ".[data]"     # Excel support
+python -m pip install -e ".[web]"      # QR codes, URL metadata
 ```
 
 ```bash
@@ -58,25 +65,25 @@ devkit ai cost --model gpt-4o --input-tokens 1000 --output-tokens 500
 
 ## Installation
 
-### From PyPI
+### From source (core tools)
 
 ```bash
-pip install devkit-tools
+python -m pip install -e .
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/yourusername/devkit.git
-cd devkit
+git clone https://github.com/1998x-stack/USEFULL_TOOLS.git
+cd USEFULL_TOOLS
 pip install -e ".[all]"
 ```
 
 ### Development Setup
 
 ```bash
-git clone https://github.com/yourusername/devkit.git
-cd devkit
+git clone https://github.com/1998x-stack/USEFULL_TOOLS.git
+cd USEFULL_TOOLS
 pip install -e ".[all]"
 pip install -r requirements-dev.txt
 pytest tests/ -v
@@ -420,10 +427,10 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ```bash
 # 安装核心工具
-pip install devkit-tools
+python -m pip install -e .
 
 # 安装所有功能
-pip install devkit-tools[all]
+python -m pip install -e ".[all]"
 ```
 
 ### 工具分类

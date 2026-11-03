@@ -15,19 +15,26 @@
 
 ## 安装
 
+> **注意：** PyPI 上的 `devkit-tools` 是其他项目，不是本仓库的发行包。请从源码安装，详见 [安全说明](docs/SAFETY.md)。
+
+
 ```bash
+# 获取源码
+git clone https://github.com/1998x-stack/USEFULL_TOOLS.git
+cd USEFULL_TOOLS
+
 # 安装核心工具
-pip install devkit-tools
+python -m pip install -e .
 
 # 安装所有功能
-pip install devkit-tools[all]
+python -m pip install -e ".[all]"
 
 # 按需安装
-pip install devkit-tools[ai]       # Token 计数、费用计算
-pip install devkit-tools[nlp]      # 中文文本处理
-pip install devkit-tools[convert]  # PDF、DOCX、媒体转换
-pip install devkit-tools[data]     # Excel 支持
-pip install devkit-tools[web]      # 二维码、URL 元数据
+python -m pip install -e ".[ai]"       # Token 计数、费用计算
+python -m pip install -e ".[nlp]"      # 中文文本处理
+python -m pip install -e ".[convert]"  # PDF、DOCX、媒体转换
+python -m pip install -e ".[data]"     # Excel 支持
+python -m pip install -e ".[web]"      # 二维码、URL 元数据
 ```
 
 ---

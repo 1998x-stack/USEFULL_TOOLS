@@ -9,7 +9,7 @@ from devkit.files.batch_rename import batch_rename
 
 def test_find_duplicates(tmp_path):
     (tmp_path / "file.txt").write_text("content")
-    (tmp_path / "file (1).txt").write_text("duplicate")
+    (tmp_path / "file (1).txt").write_text("content")
     dups = find_duplicates(str(tmp_path), extensions=["*.txt"])
     assert len(dups) == 1
     assert "file (1).txt" in dups[0]

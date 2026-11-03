@@ -31,9 +31,9 @@ dependencies = [
 devkit = "devkit.cli:cli"
 
 [project.urls]
-Homepage = "https://github.com/1998x-stack/devkit"
-Repository = "https://github.com/1998x-stack/devkit"
-Issues = "https://github.com/1998x-stack/devkit/issues"
+Homepage = "https://github.com/1998x-stack/USEFULL_TOOLS"
+Repository = "https://github.com/1998x-stack/USEFULL_TOOLS"
+Issues = "https://github.com/1998x-stack/USEFULL_TOOLS/issues"
 
 [project.optional-dependencies]
 ai = ["tiktoken>=0.5.0", "jinja2>=3.0"]
