@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/v0.4-b-structure-aware-docx]
+    branches: [main, feat/v0.4-b-structure-aware-docx, feat/v0.4-c-cjk-pdf-renderer]
   pull_request:
     branches: [main]
 
@@ -36,4 +36,30 @@ jobs:
         run: ruff check devkit/ tests/
 
       - name: Run tests
-        run: pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short -m 'not pdf_integration'
+
+  pdf-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install real PDF rendering backends and CJK fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends pandoc libreoffice-writer fontconfig fonts-noto-cjk
+          pandoc --version | head -n 1
+          libreoffice --version
+          fc-match -f '%{family}\n%{file}\n%{index}\n' 'Noto Sans CJK SC'
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,all]"
+
+      - name: Real CJK PDF generation and raster regression tests
+        run: pytest tests/test_pdf_v04c.py -v --tb=short -m pdf_integration

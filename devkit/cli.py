@@ -92,10 +92,15 @@ def convert_resize(input_path, size, output):
 @convert.command("md2pdf")
 @click.argument("input_path")
 @click.option("-o", "--output", default=None, help="Output PDF path")
-def convert_md2pdf(input_path, output):
-    """Convert Markdown to PDF."""
+@click.option("--font-family", default=None, help="Prefer this installed font family for CJK")
+@click.option("--min-text-recall", default=0.995, type=click.FloatRange(min=0.0, max=1.0),
+              help="Minimum required Unicode text recall (0.0–1.0)")
+def convert_md2pdf(input_path, output, font_family, min_text_recall):
+    """Convert Markdown to PDF with font preflight and content integrity checks."""
     from devkit.convert.md2pdf import markdown_to_pdf
-    result = markdown_to_pdf(input_path, output)
+    result = markdown_to_pdf(
+        input_path, output, font_family=font_family, min_text_recall=min_text_recall
+    )
     click.echo(f"Converted: {result}")
 
 

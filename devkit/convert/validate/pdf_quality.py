@@ -100,11 +100,12 @@ def inspect_pdf_quality(
                             if value in ("\ufffd", "\u25a1", "\u25af"):
                                 replacement += 1
                             rect = fitz.Rect(char["bbox"])
-                            if not page.rect.contains(rect + (-2, -2, 2, 2)):
-                                # Page boundaries should contain text glyph boxes
-                                # with a 2pt allowance for ascenders/antialiasing.
-                                if rect.x0 < -2 or rect.y0 < -2 or rect.x1 > page.rect.width + 2 or rect.y1 > page.rect.height + 2:
-                                    clipped += 1
+                            # Page boundaries should contain character boxes,
+                            # allowing a small tolerance for glyph extents.
+                            if (rect.x0 < -2 or rect.y0 < -2 or
+                                    rect.x1 > page.rect.width + 2 or
+                                    rect.y1 > page.rect.height + 2):
+                                clipped += 1
             raster = page.get_pixmap(matrix=fitz.Matrix(0.7, 0.7), colorspace=fitz.csRGB, alpha=False)
             pixels = raster.samples
             if not any(byte < 244 for byte in pixels[::3]):
