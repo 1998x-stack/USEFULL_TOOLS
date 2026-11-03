@@ -51,18 +51,18 @@ def inspect_line_overlaps(path, minimum_ratio=0.25):
                 for line in block.get("lines", []):
                     if line.get("spans"):
                         rect = fitz.Rect(line["bbox"])
-                        if rect.get_area() > 0:
+                        if rect.width > 0 and rect.height > 0:
                             lines.append(rect)
             for i, left in enumerate(lines):
                 for right in lines[i + 1:]:
                     intersection = left & right
-                    area = intersection.get_area()
+                    area = max(0, intersection.width) * max(0, intersection.height)
                     # MuPDF can split one heading into overlapping tiny
                     # glyph fragments (e.g. a 3.6pt-wide numbering span).
                     # Require a meaningful horizontal and vertical collision.
                     if area < 12 or intersection.width < 8 or intersection.height < 4:
                         continue
-                    ratio = area / min(left.get_area(), right.get_area())
+                    ratio = area / min(left.width * left.height, right.width * right.height)
                     if ratio >= minimum_ratio:
                         findings.append({
                             "page": page_index,
