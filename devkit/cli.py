@@ -338,6 +338,15 @@ def data():
     pass
 
 
+def _data_call(operation, *args, **kwargs):
+    """Turn expected data-validation errors into concise CLI failures."""
+    import csv as csv_mod
+    try:
+        return operation(*args, **kwargs)
+    except (ValueError, OSError, csv_mod.Error, KeyError) as exc:
+        raise click.ClickException(str(exc)) from exc
+
+
 # --- Data commands ---
 
 @data.command("json-flatten")
@@ -346,17 +355,22 @@ def data():
 def data_json_flatten(input_file, output):
     """Flatten nested JSON to dot-notation keys."""
     import json as json_mod
-    from devkit.data.json_utils import flatten_json
-    with open(input_file, "r", encoding="utf-8") as f:
-        original = json_mod.load(f)
-    result = flatten_json(original)
-    out = json_mod.dumps(result, indent=2, ensure_ascii=False)
-    if output:
-        with open(output, "w", encoding="utf-8") as f:
-            f.write(out)
-        click.echo(f"Flattened JSON written to {output}")
-    else:
-        click.echo(out)
+    from devkit.data.json_utils import flatten_json, reject_duplicate_pairs, reject_nonfinite_constant
+    from devkit.data.io import atomic_text_output
+    def transform():
+        with open(input_file, "r", encoding="utf-8") as f:
+            original = json_mod.load(
+                f, object_pairs_hook=reject_duplicate_pairs, parse_constant=reject_nonfinite_constant
+            )
+        result = flatten_json(original)
+        rendered = json_mod.dumps(result, indent=2, ensure_ascii=False)
+        if output:
+            with atomic_text_output(output, [input_file]) as stream:
+                stream.write(rendered)
+            click.echo(f"Flattened JSON written to {output}")
+        else:
+            click.echo(rendered)
+    _data_call(transform)
 
 
 @data.command("json-merge")
@@ -365,7 +379,7 @@ def data_json_flatten(input_file, output):
 def data_json_merge(files, output):
     """Merge multiple JSONL files."""
     from devkit.data.json_utils import merge_jsonl
-    merge_jsonl(list(files), output)
+    _data_call(merge_jsonl, list(files), output)
     click.echo(f"Merged {len(files)} files into {output}")
 
 
@@ -375,7 +389,7 @@ def data_json_merge(files, output):
 def data_csv_merge(files, output):
     """Merge multiple CSV files."""
     from devkit.data.csv_utils import merge_csvs
-    merge_csvs(list(files), output)
+    _data_call(merge_csvs, list(files), output)
     click.echo(f"Merged {len(files)} files into {output}")
 
 
@@ -386,7 +400,7 @@ def data_csv_merge(files, output):
 def data_csv_split(input_file, rows, output_dir):
     """Split a large CSV into smaller files."""
     from devkit.data.csv_utils import split_csv
-    result = split_csv(input_file, rows, output_dir)
+    result = _data_call(split_csv, input_file, rows, output_dir)
     click.echo(f"Split into {len(result)} files in {output_dir}")
 
 
@@ -399,7 +413,7 @@ def data_excel2csv(input_file, output, sheet):
     from devkit.data.excel2csv import excel_to_csv
     if output is None:
         output = input_file.rsplit(".", 1)[0] + ".csv"
-    excel_to_csv(input_file, output, sheet=sheet)
+    _data_call(excel_to_csv, input_file, output, sheet=sheet)
     click.echo(f"Converted to {output}")
 
 
