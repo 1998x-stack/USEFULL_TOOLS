@@ -26,7 +26,7 @@ a newly published PyPI release.
 - [V0.3 data contracts](docs/data-contracts-v0.3.md) · [V0.4 architecture](docs/conversion-v0.4.md)
 - [Structure-aware DOCX](docs/conversion-v0.4b.md) · [CJK PDF](docs/conversion-v0.4c.md)
 - [Visual golden review](docs/conversion-v0.4d.md) · [Quality profiles and API](docs/conversion-v0.4e.md)
-- [Quality report JSON Schema](schemas/conversion-report-v1.schema.json) · [Safety](docs/SAFETY.md)
+- [Quality report JSON Schema](schemas/conversion-report-v1.schema.json) · [Safety](docs/SAFETY.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ### Conversion quick path
 

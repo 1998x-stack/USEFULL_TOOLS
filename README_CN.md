@@ -89,7 +89,7 @@ devkit convert audit examples/sample_data/sample.md /tmp/sample.docx \
   --profile standard --report /tmp/recheck.json
 ```
 
-严格 PDF 示例、不可变黄金截图和报告字段详见 [V0.4-E 文档](docs/conversion-v0.4e.md)。
+严格 PDF 示例、不可变黄金截图和报告字段详见 [V0.4-E 文档](docs/conversion-v0.4e.md)。 常见问题见 [故障排查](docs/TROUBLESHOOTING.md)。
 ## 工具分类
 
 ### 转换工具 (Convert) - 9 个工具

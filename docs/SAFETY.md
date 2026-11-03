@@ -18,3 +18,12 @@ python -m pip install -e ".[all]"
 ~~~
 
 The Python package import path and command name remain `devkit`. Choose a separate, available distribution name before publishing to PyPI.
+
+## Conversion safety and quality reports
+
+- The converter validates a staged single output before publishing it; failures before publication leave existing destinations untouched.
+- A requested JSON quality report is published as a **separate** file. A valid document may already have been saved if the later report write fails: document + report are not a single atomic multi-file transaction.
+- `fast` retains mandatory converter checks; `standard` adds independent content/structure evidence. `strict` PDF only supports matching approved visual fixtures in a locked environment.
+- Markdown images must be local, exist and stay within the source document directory; remote image references are rejected before rendering.
+- The six reviewed visual PNGs validate regression fixtures, not arbitrary customer documents or cross-platform PDF/A/accessibility features.
+- More information: [Quality profiles](conversion-v0.4e.md), [Visual goldens](conversion-v0.4d.md), and [Troubleshooting](TROUBLESHOOTING.md).
