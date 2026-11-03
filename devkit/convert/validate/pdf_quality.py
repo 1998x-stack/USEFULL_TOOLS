@@ -3,7 +3,7 @@
 import unicodedata
 from collections import Counter
 from dataclasses import asdict, dataclass
-from typing import Optional, Tuple
+from typing import Tuple
 
 import fitz
 

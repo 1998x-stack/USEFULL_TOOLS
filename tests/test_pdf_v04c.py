@@ -1,8 +1,6 @@
 """V0.4-C CJK PDF conversion: independent checks plus real renderer coverage."""
 
-import json
 import shutil
-from pathlib import Path
 
 import fitz
 import pytest
