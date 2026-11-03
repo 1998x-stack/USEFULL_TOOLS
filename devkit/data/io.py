@@ -16,7 +16,9 @@ def ensure_distinct_output(output: str, inputs: Iterable[str] = ()) -> None:
         raise ValueError(f"Refusing symbolic-link output: {output}")
     resolved = os.path.realpath(output)
     for source in inputs:
-        if os.path.realpath(source) == resolved:
+        if os.path.realpath(source) == resolved or (
+            os.path.exists(output) and os.path.exists(source) and os.path.samefile(output, source)
+        ):
             raise ValueError(f"Output must differ from input: {output}")
 
 

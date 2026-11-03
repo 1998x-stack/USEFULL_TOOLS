@@ -14,6 +14,8 @@
 
 ---
 
+See [V0.3 Data Contracts](docs/data-contracts-v0.3.md) for validation, output safety, and JSON path escaping.
+
 ## Features
 
 | Category | Tools | Description |
@@ -30,7 +32,7 @@
 
 ## Quick Start
 
-> **Important:** The `devkit-tools` name on PyPI is maintained by an unrelated project. Install this repository from source, not via `python -m pip install -e .`. See [SAFETY.md](docs/SAFETY.md).
+> **Important:** The `devkit-tools` name on PyPI is maintained by an unrelated project. Install this repository from source rather than the unrelated PyPI package. See [SAFETY.md](docs/SAFETY.md).
 
 
 ```bash
