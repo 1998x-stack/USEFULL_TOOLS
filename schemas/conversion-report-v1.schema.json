@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Devkit Conversion Quality Report v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "profile",
+    "operation",
+    "source",
+    "destination",
+    "status",
+    "achieved_level",
+    "checks",
+    "metrics",
+    "diagnostics",
+    "engine",
+    "elapsed_ms"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "profile": {
+      "enum": [
+        "fast",
+        "standard",
+        "strict"
+      ]
+    },
+    "operation": {
+      "enum": [
+        "markdown_to_pdf",
+        "markdown_to_docx",
+        "word_to_pdf",
+        "word_to_md"
+      ]
+    },
+    "source": {
+      "type": "string"
+    },
+    "destination": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "running",
+        "passed",
+        "failed"
+      ]
+    },
+    "achieved_level": {
+      "enum": [
+        "none",
+        "L1",
+        "L2",
+        "L3"
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "evidence"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_run"
+            ]
+          },
+          "evidence": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "code",
+          "severity",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "info",
+              "warning",
+              "error"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "elapsed_ms": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}
