@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "render": {
+    "dpi": 96,
+    "max_pages": 8,
+    "pixel_threshold": 28,
+    "max_changed_fraction": 0.006,
+    "max_mean_error": 1.2
+  },
+  "cases": [
+    {
+      "id": "cjk-layout",
+      "markdown": "cjk-layout.md",
+      "regions": [
+        {
+          "name": "header-and-body",
+          "page": 1,
+          "rect": [
+            0.05,
+            0.04,
+            0.95,
+            0.34
+          ],
+          "max_changed_fraction": 0.006
+        },
+        {
+          "name": "table-and-media",
+          "page": 1,
+          "rect": [
+            0.05,
+            0.34,
+            0.95,
+            0.8
+          ],
+          "max_changed_fraction": 0.006
+        }
+      ]
+    },
+    {
+      "id": "pagination",
+      "markdown": "pagination.md",
+      "regions": [
+        {
+          "name": "first-page-flow",
+          "page": 1,
+          "rect": [
+            0.05,
+            0.05,
+            0.95,
+            0.94
+          ],
+          "max_changed_fraction": 0.006
+        }
+      ]
+    }
+  ]
+}

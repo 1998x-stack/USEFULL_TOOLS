@@ -33,9 +33,7 @@ def run_suite(manifest_path, out_dir, mode, emit_base64=False):
         identifier = case["id"]
         try:
             markdown = (root / case["markdown"]).resolve()
-            if not markdown.is_relative_to(root.resolve()) if hasattr(markdown, "is_relative_to") else (
-                str(root.resolve()) != str(markdown) and str(root.resolve()) not in str(markdown.parents)
-            ):
+            if root.resolve() != markdown and root.resolve() not in markdown.parents:
                 raise ValueError("Markdown path outside golden fixture root")
             doc = PandocEngine().parse_markdown(markdown)
             expected = expected_text_from_ast(doc.to_pandoc_ast())
