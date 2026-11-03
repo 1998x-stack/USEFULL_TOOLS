@@ -7,13 +7,12 @@ to text-only inspection.
 
 import hashlib
 import json
-import os
 import tempfile
 import time
 from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from devkit.convert._safe import publish_file, require_distinct, validate_docx, validate_pdf
 
