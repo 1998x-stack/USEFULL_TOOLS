@@ -112,6 +112,21 @@ def json_query(data: Any, path: str, separator: str = ".") -> Optional[Any]:
     return current
 
 
+def reject_duplicate_pairs(pairs: list) -> dict:
+    """Raise rather than silently overwrite repeated JSON object keys."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"Duplicate JSON key: {key!r}")
+        result[key] = value
+    return result
+
+
+def reject_nonfinite_constant(value: str):
+    """Reject NaN/Infinity, which are not standard JSON constants."""
+    raise ValueError(f"Non-standard JSON constant: {value}")
+
+
 def merge_jsonl(files: list, output: str) -> None:
     """Merge JSONL, validating every nonempty line before publishing output."""
     if not files:
@@ -124,7 +139,11 @@ def merge_jsonl(files: list, output: str) -> None:
                     if not value:
                         continue
                     try:
-                        json.loads(value)
+                        json.loads(
+                            value,
+                            object_pairs_hook=reject_duplicate_pairs,
+                            parse_constant=reject_nonfinite_constant,
+                        )
                     except (json.JSONDecodeError, ValueError) as exc:
                         raise ValueError(
                             f"Invalid JSONL in {filepath} on line {line_number}: {exc}"

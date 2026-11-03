@@ -7,6 +7,7 @@ import tempfile
 from typing import Iterator, List, TextIO
 
 from devkit.data.io import atomic_text_output
+from devkit.data.json_utils import reject_duplicate_pairs, reject_nonfinite_constant
 
 
 def _read_header(reader, source: str) -> List[str]:
@@ -114,18 +115,12 @@ def csv_to_json(file: str, output: str) -> None:
             out.write("\n]\n")
 
 
-def _reject_duplicate_pairs(pairs):
-    obj = {}
-    for key, value in pairs:
-        if key in obj:
-            raise ValueError(f"Duplicate JSON key: {key!r}")
-        obj[key] = value
-    return obj
-
-
 def _iter_json_array(stream: TextIO, chunk_size: int = 65536) -> Iterator[dict]:
     """Read a top-level JSON array incrementally using the stdlib decoder."""
-    decoder = json.JSONDecoder(object_pairs_hook=_reject_duplicate_pairs)
+    decoder = json.JSONDecoder(
+        object_pairs_hook=reject_duplicate_pairs,
+        parse_constant=reject_nonfinite_constant,
+    )
     buffer = ""
     offset = 0
     eof = False

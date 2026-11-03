@@ -2,6 +2,7 @@
 
 import csv
 import json
+import os
 
 import pytest
 from click.testing import CliRunner
@@ -67,7 +68,7 @@ def test_merge_refuses_hardlink_output_alias(tmp_path):
     a, linked = tmp_path / "a.csv", tmp_path / "alias.csv"
     _csv(a, [["name"], ["Alice"]])
     try:
-        linked.hardlink_to(a)
+        os.link(a, linked)
     except OSError:
         pytest.skip("hardlinks unsupported")
     with pytest.raises(ValueError, match="Output must differ"):
@@ -284,3 +285,30 @@ def test_atomic_outputs_replace_after_success(tmp_path):
     with out.open(newline="") as f:
         assert list(csv.reader(f)) == [["name"], ["A"]]
     assert not list(tmp_path.glob(".devkit-write-*"))
+
+
+
+@pytest.mark.parametrize("record", ['{"x":NaN}', '{"x":Infinity}', '{"x":1,"x":2}'])
+def test_jsonl_rejects_nonstandard_or_duplicate_json(tmp_path, record):
+    src, out = tmp_path / "invalid.jsonl", tmp_path / "out.jsonl"
+    src.write_text(record + "\n")
+    with pytest.raises(ValueError):
+        merge_jsonl([str(src)], str(out))
+    assert not out.exists()
+
+
+def test_json_to_csv_rejects_nonfinite_json(tmp_path):
+    src, out = tmp_path / "invalid.json", tmp_path / "out.csv"
+    src.write_text('[{"x": NaN}]')
+    with pytest.raises(ValueError, match="Non-standard"):
+        json_to_csv(str(src), str(out))
+    assert not out.exists()
+
+
+def test_cli_flatten_rejects_duplicate_json_keys(tmp_path):
+    src, out = tmp_path / "bad.json", tmp_path / "out.json"
+    src.write_text('{"x":1,"x":2}')
+    result = CliRunner().invoke(cli, ["data", "json-flatten", str(src), "-o", str(out)])
+    assert result.exit_code != 0
+    assert "Duplicate JSON key" in result.output
+    assert not out.exists()

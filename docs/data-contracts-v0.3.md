@@ -10,8 +10,8 @@ Data commands now fail explicitly on ambiguous or corrupt inputs.
 | CSV merge | Exact ordered headers, nonempty unique column names, equal row widths | Stream into temp file; atomically replace destination only on success |
 | CSV split | Positive rows-per-file, valid header and rows | Stage all parts; **refuse** to overwrite any existing `part_NNN.csv` |
 | CSV → JSON | Strict CSV header/row checks | Streaming JSON array; atomic publication |
-| JSON → CSV | Top-level array of objects; consistent field set; duplicate key rejection | Incremental array parsing; atomic publication |
-| JSONL merge | Each nonblank line must be valid JSON | Stream and validate; atomic publication |
+| JSON → CSV | Top-level array of objects; consistent field set; duplicate key and non-standard constant rejection | Incremental array parsing; atomic publication |
+| JSONL merge | Each nonblank line must be standard JSON with unique object keys | Stream and validate; atomic publication |
 | Excel → CSV | Sheet must exist; workbook closes even on errors | Read-only row iterator; atomic publication |
 | JSON flatten/query | Escape literal separators and backslashes; reject ambiguous unflatten paths | Return mapping in memory; CLI output atomically written |
 

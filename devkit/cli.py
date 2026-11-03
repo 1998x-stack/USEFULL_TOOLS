@@ -355,11 +355,13 @@ def _data_call(operation, *args, **kwargs):
 def data_json_flatten(input_file, output):
     """Flatten nested JSON to dot-notation keys."""
     import json as json_mod
-    from devkit.data.json_utils import flatten_json
+    from devkit.data.json_utils import flatten_json, reject_duplicate_pairs, reject_nonfinite_constant
     from devkit.data.io import atomic_text_output
     def transform():
         with open(input_file, "r", encoding="utf-8") as f:
-            original = json_mod.load(f)
+            original = json_mod.load(
+                f, object_pairs_hook=reject_duplicate_pairs, parse_constant=reject_nonfinite_constant
+            )
         result = flatten_json(original)
         rendered = json_mod.dumps(result, indent=2, ensure_ascii=False)
         if output:
