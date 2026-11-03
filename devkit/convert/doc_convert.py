@@ -1,57 +1,94 @@
-"""Document format conversion (Word, PDF, JPG, Markdown).
-
-Requires system tools: LibreOffice, Pandoc, ImageMagick.
-"""
+"""Document conversion via isolated LibreOffice / Pandoc processes."""
 
 import os
 import shutil
 import subprocess
+import tempfile
+from pathlib import Path
 from typing import Optional
+
+from devkit.convert._safe import publish_file, validate_docx, validate_pdf
+
+
+def _executable(*candidates):
+    for candidate in candidates:
+        found = shutil.which(candidate)
+        if found:
+            return found
+    raise FileNotFoundError(f"Required conversion tool not found: {' or '.join(candidates)}")
+
+
+def _run(command, timeout=120):
+    """Never use a shell; fail loudly on tool errors and timeouts."""
+    completed = subprocess.run(command, capture_output=True, text=True, timeout=timeout, check=False)
+    if completed.returncode != 0:
+        detail = (completed.stderr or completed.stdout or "").strip()[-1500:]
+        raise RuntimeError(f"Document conversion failed (exit {completed.returncode}): {detail}")
 
 
 def convert_document(input_path: str, to_format: str, output_path: Optional[str] = None) -> Optional[str]:
-    """Convert between document formats.
+    """Convert Word->PDF, Word->Markdown, or Markdown->DOCX.
 
-    Supported conversions: Word->PDF, Word->Markdown, Markdown->Word
+    Unsupported pairs retain the previous None return convention.
     """
-    if to_format == "pdf" and input_path.endswith((".docx", ".doc")):
+    ext = Path(input_path).suffix.lower()
+    if ext in (".docx", ".doc") and to_format == "pdf":
         return _word_to_pdf(input_path, output_path)
-    elif to_format == "md" and input_path.endswith((".docx", ".doc")):
+    if ext in (".docx", ".doc") and to_format == "md":
         return _word_to_markdown(input_path, output_path)
-    elif to_format == "docx" and input_path.endswith(".md"):
+    if ext == ".md" and to_format == "docx":
         return _markdown_to_word(input_path, output_path)
-    else:
-        return None
-
-
-def _word_to_pdf(input_path: str, output_path: Optional[str] = None) -> Optional[str]:
-    if not shutil.which("libreoffice"):
-        raise FileNotFoundError("LibreOffice is required for Word->PDF conversion.")
-    out_dir = os.path.dirname(output_path) if output_path else "."
-    os.makedirs(out_dir, exist_ok=True)
-    result = subprocess.run(
-        ["libreoffice", "--headless", "--convert-to", "pdf", input_path, "--outdir", out_dir],
-        capture_output=True,
-    )
-    if result.returncode == 0:
-        expected = os.path.join(out_dir, os.path.splitext(os.path.basename(input_path))[0] + ".pdf")
-        return expected if os.path.exists(expected) else None
     return None
 
 
-def _word_to_markdown(input_path: str, output_path: Optional[str] = None) -> Optional[str]:
-    if not shutil.which("pandoc"):
-        raise FileNotFoundError("Pandoc is required for Word->Markdown conversion.")
-    if output_path is None:
-        output_path = os.path.splitext(input_path)[0] + ".md"
-    result = subprocess.run(["pandoc", input_path, "-o", output_path], capture_output=True)
-    return output_path if result.returncode == 0 else None
+def _word_to_pdf(input_path: str, output_path: Optional[str] = None) -> str:
+    binary = _executable("libreoffice", "soffice")
+    source = Path(input_path).absolute()
+    if not source.is_file():
+        raise FileNotFoundError(str(source))
+    destination = output_path or str(source.with_suffix(".pdf"))
+    with tempfile.TemporaryDirectory(prefix="devkit-lo-") as directory:
+        workdir = Path(directory)
+        output_dir = workdir / "converted"
+        output_dir.mkdir()
+        profile = workdir / "profile"
+        _run([
+            binary,
+            "-env:UserInstallation=" + profile.as_uri(),
+            "--headless",
+            "--convert-to", "pdf:writer_pdf_Export",
+            "--outdir", str(output_dir),
+            str(source),
+        ])
+        produced = output_dir / (source.stem + ".pdf")
+        if not produced.is_file():
+            raise RuntimeError(f"LibreOffice did not produce expected PDF: {produced}")
+        return publish_file(produced, destination, [source], validator=validate_pdf)
 
 
-def _markdown_to_word(input_path: str, output_path: Optional[str] = None) -> Optional[str]:
-    if not shutil.which("pandoc"):
-        raise FileNotFoundError("Pandoc is required for Markdown->Word conversion.")
-    if output_path is None:
-        output_path = os.path.splitext(input_path)[0] + ".docx"
-    result = subprocess.run(["pandoc", input_path, "-o", output_path], capture_output=True)
-    return output_path if result.returncode == 0 else None
+def _word_to_markdown(input_path: str, output_path: Optional[str] = None) -> str:
+    binary = _executable("pandoc")
+    source = Path(input_path).absolute()
+    if not source.is_file():
+        raise FileNotFoundError(str(source))
+    destination = output_path or str(source.with_suffix(".md"))
+    with tempfile.TemporaryDirectory(prefix="devkit-pandoc-") as directory:
+        produced = Path(directory) / "output.md"
+        _run([binary, str(source), "-t", "gfm", "-o", str(produced)])
+        if not produced.is_file():
+            raise RuntimeError("Pandoc did not produce Markdown")
+        return publish_file(produced, destination, [source])
+
+
+def _markdown_to_word(input_path: str, output_path: Optional[str] = None) -> str:
+    binary = _executable("pandoc")
+    source = Path(input_path).absolute()
+    if not source.is_file():
+        raise FileNotFoundError(str(source))
+    destination = output_path or str(source.with_suffix(".docx"))
+    with tempfile.TemporaryDirectory(prefix="devkit-pandoc-") as directory:
+        produced = Path(directory) / "output.docx"
+        _run([binary, str(source), "-f", "gfm", "-o", str(produced)])
+        if not produced.is_file():
+            raise RuntimeError("Pandoc did not produce DOCX")
+        return publish_file(produced, destination, [source], validator=validate_docx)
