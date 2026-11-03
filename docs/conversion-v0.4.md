@@ -57,7 +57,7 @@ devkit/convert/
 | V0.4-A | Output safety, custom paths, isolated LO, pypdf migration | Valid output, no source overwrite, CI 3.9–3.12 |
 | V0.4-B | Markdown intermediate structure and DOCX renderer | Implemented on stacked branch; real Pandoc golden tests and OOXML checks |
 | V0.4-C | Markdown/PDF renderer and CJK fonts | Text selectable and extractable, no missing Chinese glyphs |
-| V0.4-D | Independent rendering and structural fixtures | Reproducible baseline and documented tolerated deviations |
+| V0.4-D | Independent rendering and structural fixtures | PR #6: approved visual PNGs, engine lock, per-region diff and fail-closed CI |
 | V0.4-E | Diagnostics and fidelity profiles | Explain engine, unsupported features and confidence/quality gates |
 
 ## Future DocumentIR data contract
